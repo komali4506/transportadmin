@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useLoadStore, type Load, type Bid, type Transporter } from '@/store/loadStore';
+import { useTrackingStore } from '@/store/trackingStore';
 import { exportToExcel } from '@/utils/exportCsv';
 import { apiClient } from '@/services/apiClient';
 
@@ -111,17 +112,24 @@ export default function ManageLoads() {
   // Advanced dispatch & audit viewer states
   const [viewingTruckProfile, setViewingTruckProfile] = useState<any | null>(null);
   const [loadingTruckProfile, setLoadingTruckProfile] = useState(false);
-  const [loadingAddressInput, setLoadingAddressInput] = useState('Plant Gate #3, Biofactor Industrial Zone, Hyderabad, TS');
-  const [unloadingAddressInput, setUnloadingAddressInput] = useState('Warehouse B-12, Agriculture Center, Vijayawada, AP');
+  const [loadingAddressInput, setLoadingAddressInput] = useState('');
+  const [unloadingAddressInput, setUnloadingAddressInput] = useState('');
+  const [loadingGpsInput, setLoadingGpsInput] = useState('');
+  const [unloadingGpsInput, setUnloadingGpsInput] = useState('');
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
   const [viewingDocTab, setViewingDocTab] = useState<'rc' | 'insurance'>('rc');
   const [rcImgFallback, setRcImgFallback] = useState(false);
   const [insImgFallback, setInsImgFallback] = useState(false);
+  const [isTruckVerified, setIsTruckVerified] = useState(false);
 
   const handleViewTruckDetails = async (userId: string, bid: any) => {
     setLoadingTruckProfile(true);
     setRcImgFallback(false);
     setInsImgFallback(false);
+    
+    const isAlreadyVerified = selectedLoad ? localStorage.getItem(`verified_truck_${selectedLoad.id}`) === 'true' : false;
+    setIsTruckVerified(isAlreadyVerified);
+    
     setViewingDocTab('rc');
     try {
       let profileData: any = null;
@@ -133,21 +141,54 @@ export default function ManageLoads() {
         }
       }
 
-      const truckName = profileData?.vehicle_type || profileData?.truck_name || profileData?.truckName || bid.vehicleType || "TATA LPT 3518 Cowl";
-      const truckNumber = profileData?.vehicle_number || profileData?.truck_number || profileData?.truckNumber || "MH-12-KL-3402";
-      
+      let tripData: any = null;
+      if (connectionMode === 'live' && selectedLoad) {
+        try {
+          tripData = await apiClient.getTripByLoadId(selectedLoad.bidId || selectedLoad.id);
+        } catch (err) {
+          console.warn("Failed to fetch live trip details:", err);
+        }
+      } else if (selectedLoad) {
+        const localTripId = selectedLoad.tripId || `TRIP-2026-${selectedLoad.id.split('-')[1] || '1001'}`;
+        const localTrip = useTrackingStore.getState().trips.find(t => t.id === localTripId);
+        if (localTrip) {
+          tripData = {
+            id: localTrip.id,
+            vehicle_details: localTrip.vehicleNumber,
+            vehicle_number: localTrip.vehicleNumber,
+            status: localTrip.status === 'Moving' ? 'IN_TRANSIT' : localTrip.status,
+            loading_address: localTrip.origin.name !== (selectedLoad.from || 'Origin') ? localTrip.origin.name : '',
+            unloading_address: localTrip.destination.name !== (selectedLoad.to || 'Destination') ? localTrip.destination.name : '',
+            loading_gps_coordinates: localTrip.origin.lat ? `${localTrip.origin.lat}, ${localTrip.origin.lng}` : '',
+            unloading_gps_coordinates: localTrip.destination.lat ? `${localTrip.destination.lat}, ${localTrip.destination.lng}` : '',
+          };
+        }
+      }
+
       const apiBase = apiClient.getApiUrl();
+      const truckName = tripData?.vehicle_details || profileData?.vehicle_type || profileData?.truck_name || profileData?.truckName || bid.vehicleType || "Awaiting Driver Upload";
+      const truckNumber = tripData?.vehicle_number || profileData?.vehicle_number || profileData?.truck_number || profileData?.truckNumber || "Awaiting Driver Upload";
+      
       let rcImageUrl = null;
       let insImageUrl = null;
 
-      if (profileData?.documents && Array.isArray(profileData.documents)) {
+      if (tripData?.rc_url) {
+        rcImageUrl = tripData.rc_url.startsWith('http') ? tripData.rc_url : `${apiBase}${tripData.rc_url}`;
+      }
+      if (tripData?.insurance_url) {
+        insImageUrl = tripData.insurance_url.startsWith('http') ? tripData.insurance_url : `${apiBase}${tripData.insurance_url}`;
+      }
+
+      if (!rcImageUrl && profileData?.documents && Array.isArray(profileData.documents)) {
         const rcDoc = profileData.documents.find((d: any) => d.document_type === 'Vehicle RC' || d.document_type === 'vehicleRc');
-        const insDoc = profileData.documents.find((d: any) => d.document_type === 'Insurance' || d.document_type === 'insurance');
-        
         if (rcDoc?.file_path) {
           const filename = rcDoc.file_path.split(/[\\/]/).pop();
           rcImageUrl = `${apiBase}/uploads/${filename}`;
         }
+      }
+
+      if (!insImageUrl && profileData?.documents && Array.isArray(profileData.documents)) {
+        const insDoc = profileData.documents.find((d: any) => d.document_type === 'Insurance' || d.document_type === 'insurance');
         if (insDoc?.file_path) {
           const filename = insDoc.file_path.split(/[\\/]/).pop();
           insImageUrl = `${apiBase}/uploads/${filename}`;
@@ -166,6 +207,7 @@ export default function ManageLoads() {
       setViewingTruckProfile({
         userId,
         bid,
+        tripId: tripData?.id || bid.trip_id || selectedLoad?.tripId,
         carrierName: bid.transporterName,
         role: bid.role,
         truckName,
@@ -176,6 +218,21 @@ export default function ManageLoads() {
         experienceYears: bid.experienceYears || 6,
         kycStatus: bid.transporterDetails?.kycStatus || "Verified"
       });
+
+      const loadStatusUpper = selectedLoad?.status?.toUpperCase() || '';
+      const isAlreadyDispatched = loadStatusUpper === 'ASSIGNED & DISPATCHED' || tripData?.status === 'IN_TRANSIT';
+
+      if (isAlreadyDispatched || tripData?.loading_address || tripData?.unloading_address) {
+        setLoadingAddressInput(tripData?.loading_address || '');
+        setUnloadingAddressInput(tripData?.unloading_address || '');
+        setLoadingGpsInput(tripData?.loading_gps_coordinates || '');
+        setUnloadingGpsInput(tripData?.unloading_gps_coordinates || '');
+      } else {
+        setLoadingAddressInput('');
+        setUnloadingAddressInput('');
+        setLoadingGpsInput('');
+        setUnloadingGpsInput('');
+      }
     } catch (e: any) {
       toast({
         title: "Error Loading Truck Profile",
@@ -193,9 +250,9 @@ export default function ManageLoads() {
     
     setIsSubmittingAddress(true);
     try {
-      const tripId = selectedLoad.tripId || `TRIP-2026-${selectedLoad.id.split('-')[1] || '1001'}`;
-      const loadingGpsCoordinates = "17.3850, 78.4867"; // Hyderabad
-      const unloadingGpsCoordinates = "16.5062, 80.6480"; // Vijayawada
+      const tripId = viewingTruckProfile.tripId || selectedLoad.tripId || `TRIP-2026-${selectedLoad.id.split('-')[1] || '1001'}`;
+      const loadingGpsCoordinates = loadingGpsInput;
+      const unloadingGpsCoordinates = unloadingGpsInput;
 
       if (connectionMode === 'live') {
         await apiClient.dispatchTripDetails(tripId, {
@@ -205,6 +262,14 @@ export default function ManageLoads() {
           unloadingGpsCoordinates
         });
       }
+
+      // Sync local tracking store to initiate the live GPS movement simulation
+      useTrackingStore.getState().dispatchTripDetails(tripId, {
+        loadingAddress: loadingAddressInput,
+        unloadingAddress: unloadingAddressInput,
+        loadingGpsCoordinates,
+        unloadingGpsCoordinates
+      });
 
       updateLoad(selectedLoad.id, {
         status: 'Assigned & Dispatched',
@@ -231,125 +296,28 @@ export default function ManageLoads() {
 
   const renderSmartRcCard = (profile: any) => {
     return (
-      <div className="w-[440px] h-[260px] rounded-2xl bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900 border border-slate-700/60 p-4 shadow-2xl flex flex-col justify-between relative overflow-hidden select-none text-left">
-        <div className="absolute inset-0 opacity-5 pointer-events-none bg-[radial-gradient(#e5e7eb_1px,transparent_1px)] [background-size:16px_16px]" />
-        <div className="border-b border-slate-800/80 pb-2 flex items-center justify-between z-10">
-          <div className="flex items-center gap-2">
-            <div className="w-5 h-5 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center text-[10px] text-emerald-400 font-bold">印</div>
-            <div>
-              <p className="text-[7px] font-bold text-slate-400 uppercase tracking-widest leading-none">MINISTRY OF ROAD TRANSPORT & HIGHWAYS</p>
-              <p className="text-[9px] font-extrabold text-white tracking-wider leading-none mt-0.5">GOVERNMENT OF INDIA</p>
-            </div>
-          </div>
-          <div className="text-right">
-            <span className="text-[8px] font-mono px-1.5 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-bold">
-              RC VERIFIED
-            </span>
-          </div>
+      <div className="w-[440px] h-[260px] rounded-2xl bg-slate-950 border border-dashed border-slate-800 p-6 flex flex-col items-center justify-center text-center shadow-2xl relative select-none">
+        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 animate-pulse">
+          <AlertTriangle size={20} className="text-amber-500" />
         </div>
-        <div className="flex gap-4 items-center my-auto z-10">
-          <div className="w-12 h-9 rounded-md bg-gradient-to-br from-amber-300 via-yellow-400 to-amber-500 border border-amber-600/30 shadow-md relative flex items-center justify-center p-1 overflow-hidden shrink-0">
-            <div className="absolute inset-x-2 top-0 bottom-0 border-l border-r border-amber-700/30" />
-            <div className="absolute inset-y-1.5 left-0 right-0 border-t border-b border-amber-700/30" />
-            <div className="w-4 h-4 rounded-sm bg-amber-600/20 border border-amber-600/30 z-10" />
-          </div>
-          <div className="flex-1">
-            <p className="text-[8px] font-bold text-slate-400 uppercase tracking-wider leading-none">REGISTRATION NUMBER</p>
-            <p className="text-xl font-extrabold font-mono text-white tracking-widest mt-1">
-              {profile.truckNumber || 'MH-12-KL-3402'}
-            </p>
-            <p className="text-[9px] font-medium text-indigo-300 mt-0.5 leading-none">
-              {profile.truckName || 'TATA LPT 3518'} / HEAVY MOTOR VEHICLE
-            </p>
-          </div>
-        </div>
-        <div className="grid grid-cols-3 gap-2 pt-2.5 border-t border-slate-800/80 z-10 text-[8px]">
-          <div>
-            <span className="text-slate-400 uppercase font-bold block">REGISTERED OWNER</span>
-            <span className="font-extrabold text-white truncate block mt-0.5">
-              {profile.carrierName || 'Biofactor Transporter'}
-            </span>
-          </div>
-          <div>
-            <span className="text-slate-400 uppercase font-bold block">REGISTRATION DATE</span>
-            <span className="font-extrabold text-white block mt-0.5">12-Feb-2024</span>
-          </div>
-          <div>
-            <span className="text-slate-400 uppercase font-bold block">VALIDITY EXPIRE</span>
-            <span className="font-extrabold text-emerald-400 block mt-0.5">11-Feb-2039</span>
-          </div>
-        </div>
-        <div className="absolute right-3 top-12 opacity-30 flex flex-col items-center">
-          <div className="w-10 h-10 rounded-full border-2 border-dashed border-indigo-400 flex items-center justify-center text-[7px] text-indigo-400 font-bold text-center rotate-12 leading-tight">
-            STATE DEPT
-          </div>
-        </div>
+        <h4 className="text-sm font-bold text-slate-200">No Vehicle RC Document Uploaded</h4>
+        <p className="text-[11px] text-slate-400 mt-2 max-w-[300px] leading-relaxed">
+          The driver or transporter has not uploaded a digital copy of the Registration Certificate (RC) for this trip yet.
+        </p>
       </div>
     );
   };
 
   const renderSmartInsuranceCard = (profile: any) => {
     return (
-      <div className="w-[430px] h-[300px] rounded-xl bg-gradient-to-b from-white via-slate-50 to-white border-4 border-double border-slate-300 p-4 shadow-2xl flex flex-col justify-between text-slate-800 relative overflow-hidden select-none text-left">
-        <div className="text-center border-b pb-2 border-slate-200 relative">
-          <div className="flex items-center justify-center gap-1">
-            <Award className="text-blue-700 h-4 w-4" />
-            <h4 className="text-xs font-black tracking-widest text-blue-900 uppercase">ROYAL SECURITY INSURANCE CO. LTD.</h4>
-          </div>
-          <p className="text-[7px] font-bold text-slate-500 uppercase tracking-widest leading-none mt-1">COMMERCIAL MOTOR VEHICLE COMPREHENSIVE INSURANCE POLICY</p>
-          <span className="absolute right-0 top-0 text-[7px] font-mono font-bold bg-green-100 border border-green-200 text-green-700 px-1 rounded">
-            ACTIVE
-          </span>
+      <div className="w-[430px] h-[260px] rounded-2xl bg-slate-950 border border-dashed border-slate-800 p-6 flex flex-col items-center justify-center text-center shadow-2xl relative select-none">
+        <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 animate-pulse">
+          <AlertTriangle size={20} className="text-amber-500" />
         </div>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-2.5 my-auto text-[8px] border-b pb-3 border-slate-100">
-          <div className="space-y-0.5">
-            <span className="text-slate-400 uppercase font-bold block">POLICY NUMBER</span>
-            <span className="font-bold text-slate-800 font-mono block">RS-5590-M-489021-2026</span>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-slate-400 uppercase font-bold block">INSURED PARTY NAME</span>
-            <span className="font-bold text-slate-800 block truncate">
-              {profile.carrierName || 'Biofactor Transporter'}
-            </span>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-slate-400 uppercase font-bold block">VEHICLE REGISTRATION NO.</span>
-            <span className="font-bold text-slate-800 font-mono block">{profile.truckNumber || 'MH-12-KL-3402'}</span>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-slate-400 uppercase font-bold block">COVERAGE PERIOD VALIDITY</span>
-            <span className="font-bold text-slate-800 block">
-              Until Dec 31, 2026 (23:59:59)
-            </span>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-slate-400 uppercase font-bold block">INSURED DECLARED VALUE (IDV)</span>
-            <span className="font-bold text-green-700 font-mono block">₹28,50,000.00</span>
-          </div>
-          <div className="space-y-0.5">
-            <span className="text-slate-400 uppercase font-bold block">PREMIUM CONTRIBUTION</span>
-            <span className="font-bold text-slate-800 font-mono block">₹48,250.00 (PAID)</span>
-          </div>
-        </div>
-        <div className="flex justify-between items-end pt-2">
-          <div className="space-y-0.5">
-            <p className="text-[7px] text-slate-400 leading-none">Underwriter stamp & code</p>
-            <div className="flex items-center gap-1.5 mt-1">
-              <div className="w-10 h-10 rounded-full border border-dashed border-red-500/80 flex items-center justify-center text-[5px] text-red-500 font-bold text-center rotate-12 leading-tight">
-                ROYAL INS.<br/>APPROVED
-              </div>
-              <div className="w-10 h-10 rounded-full border border-double border-indigo-600/80 flex items-center justify-center text-[5px] text-indigo-600 font-bold text-center -rotate-6 leading-tight">
-                BIOFACTOR<br/>VERIFIED
-              </div>
-            </div>
-          </div>
-          <div className="text-right">
-            <p className="text-[6px] italic font-serif text-slate-500">Chief Underwriting Officer</p>
-            <div className="w-20 h-5 border-b border-slate-300 font-serif text-[10px] text-slate-400 mt-0.5">
-              S. Chatterjee
-            </div>
-          </div>
-        </div>
+        <h4 className="text-sm font-bold text-slate-200">No Insurance Document Uploaded</h4>
+        <p className="text-[11px] text-slate-400 mt-2 max-w-[300px] leading-relaxed">
+          The driver or transporter has not uploaded a digital copy of the Commercial Vehicle Insurance Policy for this trip yet.
+        </p>
       </div>
     );
   };
@@ -472,23 +440,26 @@ export default function ManageLoads() {
         };
       }
     });
-    
     // Normalize status according to the load's overall operational status.
     // If the load is Open/Negotiation/Awaiting, then no bid is approved yet. Force all bids to 'Pending' (unless Negotiating).
     // If the load is Closed/Assigned/Completed, ensure only the accepted/approved bid shows as 'Approved' and others show as 'Rejected'.
-    const loadIsActive = selectedLoad.status === 'Open' || 
-                         selectedLoad.status === 'Negotiation In Progress' || 
-                         selectedLoad.status === 'Awaiting New Bids';
-                         
+    const loadStatusUpper = selectedLoad.status?.toUpperCase() || '';
+    const loadIsActive = loadStatusUpper === 'OPEN' || 
+                         loadStatusUpper === 'NEGOTIATION IN PROGRESS' || 
+                         loadStatusUpper === 'AWAITING NEW BIDS';
+                          
     list = list.map(b => {
       let normalizedStatus = b.status;
+      const bidStatusUpper = b.status?.toUpperCase() || '';
       
       if (loadIsActive) {
-        if (b.status === 'Approved' || b.status === 'ACCEPTED' || b.status === 'Selected') {
+        if (bidStatusUpper === 'NEGOTIATING') {
+          normalizedStatus = 'Negotiating';
+        } else {
           normalizedStatus = 'Pending';
         }
       } else {
-        const isApprovedBid = b.status === 'ACCEPTED' || b.status === 'Approved' || b.status === 'Selected' || 
+        const isApprovedBid = bidStatusUpper === 'ACCEPTED' || bidStatusUpper === 'APPROVED' || bidStatusUpper === 'SELECTED' || 
           (selectedLoad.assignedTransporter && selectedLoad.assignedTransporter.companyName === b.transporterName);
           
         if (isApprovedBid) {
@@ -503,6 +474,9 @@ export default function ManageLoads() {
         status: normalizedStatus
       };
     });
+    
+    // Filter out rejected bids from display
+    list = list.filter(b => b.status !== 'Rejected' && b.status !== 'REJECTED');
     
     // Search by User Name (transporter/driver name) or Vehicle Type
     if (bidSearch.trim() !== '') {
@@ -2031,91 +2005,173 @@ export default function ManageLoads() {
                       )}
                     </div>
                   </div>
+
+                  {/* Verification Button */}
+                  <div className="pt-4">
+                    {!isTruckVerified ? (
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setIsTruckVerified(true);
+                          if (selectedLoad) {
+                            localStorage.setItem(`verified_truck_${selectedLoad.id}`, 'true');
+                          }
+                        }}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-11 rounded-xl shadow-lg active:scale-95 flex items-center justify-center gap-2 border border-emerald-500/20"
+                      >
+                        <ShieldCheck size={18} />
+                        Approve & Verify Truck Credentials
+                      </Button>
+                    ) : (
+                      <div className="w-full py-3 px-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-bold flex items-center justify-center gap-2 text-sm">
+                        <CheckCircle2 size={18} className="text-emerald-400" />
+                        Truck Credentials Verified ✓
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Right Column: Dispatch Input Form */}
-                <div className="flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-800 md:pl-6 pt-6 md:pt-0">
-                  <form onSubmit={handleDispatchTrip} className="space-y-6 flex-1 flex flex-col justify-between text-left">
-                    <div className="space-y-4">
-                      <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 space-y-1.5 text-left">
-                        <div className="flex items-center gap-2 font-bold text-blue-200">
-                          <CheckCircle2 size={14} className="text-blue-400" />
-                          DOCUMENT REVIEW APPROVED
-                        </div>
-                        <p className="leading-relaxed">
-                          The documents and truck credentials match standard regulations. Please proceed with specifying pickup & delivery destinations to assign the trip.
-                        </p>
-                      </div>
-
-                      {/* Loading Address */}
-                      <div className="space-y-2 text-left">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <MapPin size={13} className="text-green-500" /> Loading Address
-                        </label>
-                        <Input 
-                          value={loadingAddressInput}
-                          onChange={(e) => setLoadingAddressInput(e.target.value)}
-                          placeholder="Enter dispatch pick-up point address..."
-                          className="bg-slate-950 border-slate-800 text-white focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-600"
-                          required
-                        />
-                      </div>
-
-                      {/* Unloading Address */}
-                      <div className="space-y-2 text-left">
-                        <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
-                          <MapPin size={13} className="text-red-500" /> Unloading Address
-                        </label>
-                        <Input 
-                          value={unloadingAddressInput}
-                          onChange={(e) => setUnloadingAddressInput(e.target.value)}
-                          placeholder="Enter drop-off destination address..."
-                          className="bg-slate-950 border-slate-800 text-white focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-600"
-                          required
-                        />
-                      </div>
-
-                      {/* Advanced/Auto GPS Coordinate Previews */}
-                      <div className="p-3 bg-slate-950/40 rounded-lg border border-slate-800/80 text-[10px] space-y-2 font-mono text-slate-400 text-left">
-                        <div className="flex justify-between">
-                          <span>LOADING GPS COORDINATES:</span>
-                          <span className="text-emerald-400 font-bold">17.3850, 78.4867 (Hyd)</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>UNLOADING GPS COORDINATES:</span>
-                          <span className="text-red-400 font-bold">16.5062, 80.6480 (Vjw)</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-6 border-t border-slate-800 mt-6 flex justify-end gap-3">
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        onClick={() => setViewingTruckProfile(null)}
-                        className="border-slate-800 text-slate-300 hover:bg-slate-850 hover:text-white"
-                      >
-                        Cancel
-                      </Button>
-                      <Button 
-                        type="submit" 
-                        disabled={isSubmittingAddress}
-                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-9 px-5 shadow-lg active:scale-95 flex items-center gap-2"
-                      >
-                        {isSubmittingAddress ? (
-                          <>
-                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                            Dispatching...
-                          </>
-                        ) : (
-                          <>
-                            <Sparkles size={14} />
-                            Submit Address & Dispatch
-                          </>
+                <div className="flex flex-col justify-between border-t md:border-t-0 md:border-l border-slate-800 md:pl-6 pt-6 md:pt-0 relative min-h-[400px]">
+                  {(() => {
+                    const isDispatched = selectedLoad?.status === 'Assigned & Dispatched';
+                    return (
+                      <>
+                        {!isTruckVerified && !isDispatched && (
+                          <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-[3px] z-20 flex flex-col items-center justify-center p-6 text-center rounded-r-2xl">
+                            <div className="w-14 h-14 rounded-full bg-slate-950 border border-slate-850 flex items-center justify-center text-slate-500 mb-4 shadow-2xl animate-pulse">
+                              <AlertTriangle size={24} className="text-amber-500" />
+                            </div>
+                            <h4 className="text-sm font-bold text-slate-200">Verification Pending</h4>
+                            <p className="text-xs text-slate-400 mt-2 max-w-xs leading-relaxed">
+                              Please review the carrier's compliance documents (RC & Insurance) on the left and click <strong>"Approve & Verify Truck Credentials"</strong> to unlock the dispatch routing console.
+                            </p>
+                          </div>
                         )}
-                      </Button>
-                    </div>
-                  </form>
+
+                        <form onSubmit={handleDispatchTrip} className="space-y-6 flex-1 flex flex-col justify-between text-left">
+                          <div className="space-y-4">
+                            {isDispatched ? (
+                              <div className="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 space-y-1.5 text-left">
+                                <div className="flex items-center gap-2 font-bold text-blue-200">
+                                  <CheckCircle2 size={14} className="text-blue-400" />
+                                  TRIP ASSIGNED & DISPATCHED
+                                </div>
+                                <p className="leading-relaxed text-slate-300">
+                                  This trip has already been successfully dispatched. The location coordinates and addresses have been transmitted to the driver.
+                                </p>
+                              </div>
+                            ) : (
+                              <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-xs text-emerald-300 space-y-1.5 text-left">
+                                <div className="flex items-center gap-2 font-bold text-emerald-200">
+                                  <CheckCircle2 size={14} className="text-emerald-400" />
+                                  DOCUMENT REVIEW APPROVED
+                                </div>
+                                <p className="leading-relaxed text-slate-300">
+                                  The documents and truck credentials match standard regulations. Please proceed with specifying pickup & delivery destinations to assign the trip.
+                                </p>
+                              </div>
+                            )}
+
+                            {/* Loading Address */}
+                            <div className="space-y-2 text-left">
+                              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <MapPin size={13} className="text-green-500" /> Loading Address
+                              </label>
+                              <Input 
+                                value={loadingAddressInput}
+                                onChange={(e) => setLoadingAddressInput(e.target.value)}
+                                placeholder="Enter dispatch pick-up point address..."
+                                className="bg-slate-950 border-slate-800 text-white focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-600 disabled:opacity-75 disabled:cursor-not-allowed"
+                                required
+                                disabled={isDispatched}
+                              />
+                            </div>
+
+                            {/* Unloading Address */}
+                            <div className="space-y-2 text-left">
+                              <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <MapPin size={13} className="text-red-500" /> Unloading Address
+                              </label>
+                              <Input 
+                                value={unloadingAddressInput}
+                                onChange={(e) => setUnloadingAddressInput(e.target.value)}
+                                placeholder="Enter drop-off destination address..."
+                                className="bg-slate-950 border-slate-800 text-white focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-600 disabled:opacity-75 disabled:cursor-not-allowed"
+                                required
+                                disabled={isDispatched}
+                              />
+                            </div>
+
+                            {/* Advanced/Auto GPS Coordinates Inputs */}
+                            <div className="grid grid-cols-2 gap-4">
+                              <div className="space-y-2 text-left">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <MapPin size={13} className="text-emerald-400" /> Loading Location GPS
+                                </label>
+                                <Input 
+                                  value={loadingGpsInput}
+                                  onChange={(e) => setLoadingGpsInput(e.target.value)}
+                                  placeholder="e.g. 17.3850, 78.4867"
+                                  className="bg-slate-950 border-slate-800 text-white font-mono text-xs focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-700 disabled:opacity-75 disabled:cursor-not-allowed"
+                                  required
+                                  disabled={isDispatched}
+                                />
+                              </div>
+                              <div className="space-y-2 text-left">
+                                <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                                  <MapPin size={13} className="text-red-400" /> Unloading Location GPS
+                                </label>
+                                <Input 
+                                  value={unloadingGpsInput}
+                                  onChange={(e) => setUnloadingGpsInput(e.target.value)}
+                                  placeholder="e.g. 16.5062, 80.6480"
+                                  className="bg-slate-950 border-slate-800 text-white font-mono text-xs focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-700 disabled:opacity-75 disabled:cursor-not-allowed"
+                                  required
+                                  disabled={isDispatched}
+                                />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="pt-6 border-t border-slate-800 mt-6 flex justify-end gap-3 w-full">
+                            <Button 
+                              type="button" 
+                              variant="outline" 
+                              onClick={() => setViewingTruckProfile(null)}
+                              className="border-slate-800 text-slate-300 hover:bg-slate-850 hover:text-white"
+                            >
+                              {isDispatched ? 'Close Console' : 'Cancel'}
+                            </Button>
+                            {isDispatched ? (
+                              <div className="bg-emerald-600/20 border border-emerald-500/30 text-emerald-400 font-bold h-9 px-5 rounded-md flex items-center gap-2 text-sm shadow-md">
+                                <CheckCircle2 size={16} className="text-emerald-400" />
+                                Shared Location Details ✓
+                              </div>
+                            ) : (
+                              <Button 
+                                type="submit" 
+                                disabled={isSubmittingAddress}
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold h-9 px-5 shadow-lg active:scale-95 flex items-center gap-2"
+                              >
+                                {isSubmittingAddress ? (
+                                  <>
+                                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    Dispatching...
+                                  </>
+                                ) : (
+                                  <>
+                                    <Sparkles size={14} />
+                                    Submit Address & Dispatch
+                                  </>
+                                )}
+                              </Button>
+                            )}
+                          </div>
+                        </form>
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>

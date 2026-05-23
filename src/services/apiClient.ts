@@ -64,7 +64,7 @@ export const apiClient = {
    * Fetches the open/active bidding load feed (GET /api/loads/active)
    */
   getLoads: async (): Promise<any[]> => {
-    const response = await fetch(`${API_BASE_URL}/api/loads/active`, {
+    const response = await fetch(`${API_BASE_URL}/api/loads/all`, {
       method: 'GET',
       headers: getHeaders(),
     });
@@ -87,7 +87,9 @@ export const apiClient = {
       dispatchDate: item.dispatch_date || '',
       endDate: item.end_date || '',
       endTime: item.end_time || '',
-      status: item.status === 'CLOSED' ? 'Completed' : (item.status || 'Open'),
+      status: (item.status === 'CLOSED' || item.status === 'ASSIGNED') ? 'CLOSED' : 
+              (item.status === 'DISPATCHED' ? 'Assigned & Dispatched' : 
+              (item.status === 'OPEN' ? 'Open' : (item.status || 'Open'))),
       createdAt: item.created_at || Date.now(),
     }));
   },
@@ -220,6 +222,42 @@ export const apiClient = {
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch trips: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Fetches trip details by load ID (GET /api/trips/load/{load_id})
+   */
+  getTripByLoadId: async (loadId: string): Promise<any> => {
+    let searchId = loadId;
+    if (searchId.startsWith('LD-')) {
+      searchId = searchId.substring(3);
+    }
+    const response = await fetch(`${API_BASE_URL}/api/trips/load/${searchId}`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trip by load: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Updates vehicle details for a trip by load ID (POST /api/trips/load/{load_id}/vehicle)
+   */
+  updateTripVehicle: async (loadId: string, vehicleName: string, vehicleNumber: string): Promise<any> => {
+    let searchId = loadId;
+    if (searchId.startsWith('LD-')) {
+      searchId = searchId.substring(3);
+    }
+    const response = await fetch(`${API_BASE_URL}/api/trips/load/${searchId}/vehicle?vehicle_name=${encodeURIComponent(vehicleName)}&vehicle_number=${encodeURIComponent(vehicleNumber)}`, {
+      method: 'POST',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to update trip vehicle details: ${response.statusText}`);
     }
     return response.json();
   },
