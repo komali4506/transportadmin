@@ -304,6 +304,20 @@ export const apiClient = {
   },
 
   /**
+   * Fetches all logged historical coordinates for an active trip (GET /api/trips/{trip_id}/route-history)
+   */
+  getTripRouteHistory: async (tripId: string): Promise<any[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/trips/${tripId}/route-history`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch trip route history: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  /**
    * Submits a user's verification KYC documents to the backend database (POST /api/auth/{user_id}/upload-docs)
    */
   uploadKycDocuments: async (userId: string, formData: FormData): Promise<any> => {
@@ -385,6 +399,32 @@ export const apiClient = {
     });
     if (!response.ok) {
       throw new Error(`Failed to fetch profile: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Bulk registers users (drivers and transporters) in the backend (POST /api/admin/bulk-register)
+   */
+  bulkRegisterUsers: async (users: any[]): Promise<any[]> => {
+    const payload = users.map(u => ({
+      name: u.name,
+      mobile: u.mobile,
+      password: u.password || 'password123',
+      email: u.email || null,
+      city: u.city || null,
+      state: u.state || null,
+      role: u.role,
+      whatsapp_available: !!u.whatsapp_available
+    }));
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/bulk-register`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(`Bulk registration failed: ${response.statusText}`);
     }
     return response.json();
   },

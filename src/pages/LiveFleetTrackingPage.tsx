@@ -48,8 +48,18 @@ export default function LiveFleetTrackingPage() {
     triggerEmergency,
     dismissAlert,
     reassignVehicle,
-    simulateGpsMovement 
+    simulateGpsMovement,
+    fetchTrips
   } = useTrackingStore();
+
+  // Poll live trip coordinates & statuses from the backend database every 10 seconds
+  useEffect(() => {
+    fetchTrips();
+    const interval = setInterval(() => {
+      fetchTrips();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [fetchTrips]);
 
   const [simulationActive, setSimulationActive] = useState(true);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
@@ -62,6 +72,8 @@ export default function LiveFleetTrackingPage() {
   const [loadingGps, setLoadingGps] = useState("17.385044, 78.486671");
   const [unloadingGps, setUnloadingGps] = useState("16.506174, 80.648015");
   const [isDispatching, setIsDispatching] = useState(false);
+  const [isGeocodingLoading, setIsGeocodingLoading] = useState(false);
+  const [isGeocodingUnloading, setIsGeocodingUnloading] = useState(false);
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -110,9 +122,9 @@ export default function LiveFleetTrackingPage() {
       zoomControl: false,
     }).setView([22.5937, 78.9629], 5);
 
-    // Apply Premium Dark Theme tiles
-    window.L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+    // Apply Standard OpenStreetMap tiles
+    window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; OpenStreetMap contributors'
     }).addTo(mapRef.current);
 
     // Add clean zoom control on bottom right
@@ -132,13 +144,13 @@ export default function LiveFleetTrackingPage() {
       }
     });
 
-    let tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
+    let tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
     if (mapViewMode === 'satellite') {
       tileUrl = 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';
     } else if (mapViewMode === 'light') {
       tileUrl = 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png';
-    } else if (mapViewMode === 'traffic') {
-      tileUrl = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+    } else if (mapViewMode === 'dark') {
+      tileUrl = 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png';
     }
 
     window.L.tileLayer(tileUrl, {
@@ -224,6 +236,8 @@ export default function LiveFleetTrackingPage() {
         
         polylineRef.current[id] = polyline;
       } else {
+        // Dynamically update coordinate coordinates list
+        polylineRef.current[id].setLatLngs(trip.routeCoords.map(c => [c.lat, c.lng]));
         // Dynamically shift color or dashArray if status updates
         polylineRef.current[id].setStyle({
           color: statusColor,
@@ -277,6 +291,7 @@ export default function LiveFleetTrackingPage() {
         t.vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.driverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.transporter.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (t.bidId && t.bidId.toLowerCase().includes(searchQuery.toLowerCase())) ||
         t.id.toLowerCase().includes(searchQuery.toLowerCase());
       
       let matchesFilter = true;
@@ -303,6 +318,116 @@ export default function LiveFleetTrackingPage() {
   const selectedTrip = useMemo(() => {
     return trips.find(t => t.id === selectedTripId) || null;
   }, [trips, selectedTripId]);
+
+  const handleFetchLoadingGps = async () => {
+    if (!loadingAddress) return;
+    setIsGeocodingLoading(true);
+    try {
+      const parts = loadingAddress.split(',').map(p => p.trim()).filter(Boolean);
+      let foundData = null;
+      let matchedQuery = '';
+
+      for (let i = 0; i < parts.length; i++) {
+        const query = parts.slice(i).join(', ');
+        if (!query) continue;
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`, {
+            headers: {
+              'User-Agent': 'BiofactorLogisticsManager/1.0'
+            }
+          });
+          const data = await res.json();
+          if (data && data.length > 0) {
+            foundData = data[0];
+            matchedQuery = query;
+            break;
+          }
+        } catch (e) {
+          console.warn(`Geocoding fallback failed for: "${query}"`, e);
+        }
+      }
+
+      if (foundData) {
+        setLoadingGps(`${parseFloat(foundData.lat).toFixed(6)}, ${parseFloat(foundData.lon).toFixed(6)}`);
+        toast({
+          title: "GPS Fetched Successfully",
+          description: `Loaded from matched location: "${matchedQuery}"`,
+          className: "bg-emerald-600 text-white font-bold border-none shadow-xl"
+        });
+      } else {
+        toast({
+          title: "GPS Fetch Failed",
+          description: "Address not found in OpenStreetMap database. Please input coordinates manually.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Network Error",
+        description: "Failed to connect to Nominatim OpenStreetMap Geocoding API.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeocodingLoading(false);
+    }
+  };
+
+  const handleFetchUnloadingGps = async () => {
+    if (!unloadingAddress) return;
+    setIsGeocodingUnloading(true);
+    try {
+      const parts = unloadingAddress.split(',').map(p => p.trim()).filter(Boolean);
+      let foundData = null;
+      let matchedQuery = '';
+
+      for (let i = 0; i < parts.length; i++) {
+        const query = parts.slice(i).join(', ');
+        if (!query) continue;
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`, {
+            headers: {
+              'User-Agent': 'BiofactorLogisticsManager/1.0'
+            }
+          });
+          const data = await res.json();
+          if (data && data.length > 0) {
+            foundData = data[0];
+            matchedQuery = query;
+            break;
+          }
+        } catch (e) {
+          console.warn(`Geocoding fallback failed for: "${query}"`, e);
+        }
+      }
+
+      if (foundData) {
+        setUnloadingGps(`${parseFloat(foundData.lat).toFixed(6)}, ${parseFloat(foundData.lon).toFixed(6)}`);
+        toast({
+          title: "GPS Fetched Successfully",
+          description: `Loaded from matched location: "${matchedQuery}"`,
+          className: "bg-emerald-600 text-white font-bold border-none shadow-xl"
+        });
+      } else {
+        toast({
+          title: "GPS Fetch Failed",
+          description: "Address not found in OpenStreetMap database. Please input coordinates manually.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Network Error",
+        description: "Failed to connect to Nominatim OpenStreetMap Geocoding API.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeocodingUnloading(false);
+    }
+  };
 
   const handleDispatchSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -598,7 +723,8 @@ export default function LiveFleetTrackingPage() {
             <Table>
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] pl-6 py-3">Vehicle Number</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] pl-6 py-3">Bid ID</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Vehicle Number</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Driver Name</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Transporter</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Current Coordinates</TableHead>
@@ -612,7 +738,7 @@ export default function LiveFleetTrackingPage() {
               <TableBody>
                 {filteredTrips.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-slate-400 italic text-xs">
+                    <TableCell colSpan={10} className="text-center py-8 text-slate-400 italic text-xs">
                       No active tracked trips matching criteria.
                     </TableCell>
                   </TableRow>
@@ -623,7 +749,8 @@ export default function LiveFleetTrackingPage() {
                       onClick={() => setSelectedTripId(tr.id)}
                       className="hover:bg-slate-50/50 cursor-pointer transition-all border-b last:border-0"
                     >
-                      <TableCell className="pl-6 py-3.5 font-bold font-mono text-slate-800 text-xs">{tr.vehicleNumber}</TableCell>
+                      <TableCell className="pl-6 py-3.5 font-bold font-mono text-slate-800 text-xs">{tr.bidId}</TableCell>
+                      <TableCell className="text-xs font-bold font-mono text-slate-700">{tr.vehicleNumber}</TableCell>
                       <TableCell className="text-xs font-semibold text-slate-700">{tr.driverName}</TableCell>
                       <TableCell className="text-xs text-slate-500">{tr.transporter}</TableCell>
                       <TableCell className="text-xs font-mono text-slate-500 text-[10px]">
@@ -836,13 +963,24 @@ export default function LiveFleetTrackingPage() {
                       <div className="space-y-2">
                         <div className="space-y-1">
                           <label className="text-[9px] font-bold text-slate-500 uppercase block">Loading Address</label>
-                          <Input 
-                            value={loadingAddress}
-                            onChange={e => setLoadingAddress(e.target.value)}
-                            placeholder="Loading Address"
-                            className="bg-white h-8 text-xs"
-                            required
-                          />
+                          <div className="flex gap-2">
+                            <Input 
+                              value={loadingAddress}
+                              onChange={e => setLoadingAddress(e.target.value)}
+                              placeholder="Loading Address"
+                              className="bg-white h-8 text-xs flex-1"
+                              required
+                            />
+                            <Button
+                              type="button"
+                              onClick={handleFetchLoadingGps}
+                              disabled={isGeocodingLoading}
+                              size="sm"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-8 text-[10px] px-3 uppercase"
+                            >
+                              {isGeocodingLoading ? "..." : "Fetch GPS"}
+                            </Button>
+                          </div>
                         </div>
                         
                         <div className="space-y-1">
@@ -858,13 +996,24 @@ export default function LiveFleetTrackingPage() {
 
                         <div className="space-y-1">
                           <label className="text-[9px] font-bold text-slate-500 uppercase block">Unloading Address</label>
-                          <Input 
-                            value={unloadingAddress}
-                            onChange={e => setUnloadingAddress(e.target.value)}
-                            placeholder="Unloading Address"
-                            className="bg-white h-8 text-xs"
-                            required
-                          />
+                          <div className="flex gap-2">
+                            <Input 
+                              value={unloadingAddress}
+                              onChange={e => setUnloadingAddress(e.target.value)}
+                              placeholder="Unloading Address"
+                              className="bg-white h-8 text-xs flex-1"
+                              required
+                            />
+                            <Button
+                              type="button"
+                              onClick={handleFetchUnloadingGps}
+                              disabled={isGeocodingUnloading}
+                              size="sm"
+                              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-8 text-[10px] px-3 uppercase"
+                            >
+                              {isGeocodingUnloading ? "..." : "Fetch GPS"}
+                            </Button>
+                          </div>
                         </div>
 
                         <div className="space-y-1">

@@ -48,30 +48,73 @@ export const ocrService = {
           const rawRows: any[] = XLSX.utils.sheet_to_json(worksheet);
           
           const parsedRecords: OCRExtractedData[] = rawRows.map((row, index) => {
-            const parsedName = String(row['name'] || row['Name'] || `User ${index + 1}`).trim();
-            const parsedMobile = String(row['mobile'] || row['Mobile'] || '').trim();
-            const parsedPassword = String(row['password'] || row['Password'] || 'password123').trim();
-            const parsedEmail = String(row['email'] || row['Email'] || '').trim();
-            const parsedCity = String(row['city'] || row['City'] || '').trim();
-            const parsedState = String(row['state'] || row['State'] || '').trim();
-            const parsedRole = String(row['role'] || row['Role'] || 'Driver').trim();
+            const parsedName = String(
+              row['name'] || row['Name'] || row['Full Name'] || row['full name'] || row['Name of User'] || `User ${index + 1}`
+            ).trim();
             
-            // Parse whatsapp_available to boolean
-            const rawWa = row['whatsapp_available'] ?? row['WhatsApp Available'] ?? row['whatsapp'] ?? true;
-            const parsedWa = rawWa === true || String(rawWa).toLowerCase() === 'true' || String(rawWa) === '1' || String(rawWa).toLowerCase() === 'yes';
+            const rawMobile = String(
+              row['mobile number'] || row['mobile_number'] || row['Mobile Number'] || row['mobile'] || row['Mobile'] || row['MobileNo'] || ''
+            ).trim();
+            
+            let parsedMobile = rawMobile.replace(/\s+/g, '').replace(/[-()+]/g, '');
+            if (parsedMobile.endsWith('.0')) {
+              parsedMobile = parsedMobile.substring(0, parsedMobile.length - 2);
+            }
+            if (parsedMobile.length === 12 && parsedMobile.startsWith('91')) {
+              parsedMobile = parsedMobile.substring(2);
+            } else if (parsedMobile.length === 11 && parsedMobile.startsWith('0')) {
+              parsedMobile = parsedMobile.substring(1);
+            }
+            
+            const parsedPassword = String(
+              row['password'] || row['Password'] || 'password123'
+            ).trim();
+            
+            const parsedEmail = String(
+              row['email'] || row['Email'] || row['email address'] || row['Email Address'] || ''
+            ).trim();
+            
+            const parsedCity = String(
+              row['city'] || row['City'] || ''
+            ).trim();
+            
+            const parsedState = String(
+              row['state'] || row['State'] || ''
+            ).trim();
+            
+            const parsedRole = String(
+              row['role'] || row['Role'] || 'Driver'
+            ).trim();
+            
+            const rawWhatsapp = String(
+              row['whatsapp number'] || row['whatsapp_number'] || row['WhatsApp Number'] || row['whatsapp'] || row['WhatsApp'] || ''
+            ).trim();
+
+            let parsedWhatsapp = rawWhatsapp.replace(/\s+/g, '').replace(/[-()+]/g, '');
+            if (parsedWhatsapp.endsWith('.0')) {
+              parsedWhatsapp = parsedWhatsapp.substring(0, parsedWhatsapp.length - 2);
+            }
+            if (parsedWhatsapp.length === 12 && parsedWhatsapp.startsWith('91')) {
+              parsedWhatsapp = parsedWhatsapp.substring(2);
+            } else if (parsedWhatsapp.length === 11 && parsedWhatsapp.startsWith('0')) {
+              parsedWhatsapp = parsedWhatsapp.substring(1);
+            }
+
+            const rawWaAvailable = row['whatsapp_available'] ?? row['WhatsApp Available'] ?? true;
+            const parsedWa = rawWaAvailable === true || String(rawWaAvailable).toLowerCase() === 'true' || String(rawWaAvailable) === '1' || String(rawWaAvailable).toLowerCase() === 'yes';
 
             return {
               name: parsedName,
               companyName: parsedName, // fallback for UI components
               ownerName: parsedName,   // fallback for UI components
               mobile: parsedMobile,
-              whatsapp: parsedWa ? parsedMobile : '',
+              whatsapp: parsedWhatsapp || (parsedWa ? parsedMobile : ''),
               password: parsedPassword,
               email: parsedEmail,
               city: parsedCity,
               state: parsedState,
               role: (parsedRole.toLowerCase().includes('driver') ? 'Driver' : 'Transporter') as 'Driver' | 'Transporter',
-              whatsapp_available: parsedWa,
+              whatsapp_available: parsedWa || !!parsedWhatsapp,
               
               // Default scaffolding fields to satisfy UI models
               address: 'Spreadsheet Bulk Registry',

@@ -24,6 +24,7 @@ export interface TimelineEvent {
 
 export interface VehicleTrip {
   id: string;
+  bidId: string;
   vehicleNumber: string;
   driverName: string;
   driverPhone: string;
@@ -75,6 +76,7 @@ interface TrackingState {
   simulateGpsMovement: () => void;
   createTripFromLoad: (load: any, bid: any) => void;
   dispatchTripDetails: (tripId: string, dispatchPayload: any) => Promise<void>;
+  fetchTrips: () => Promise<void>;
 }
 
 export const useTrackingStore = create<TrackingState>((set, get) => ({
@@ -85,6 +87,95 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
   statusFilter: 'All',
   alerts: [],
   trips: [],
+  fetchTrips: async () => {
+    try {
+      const { apiClient } = await import('@/services/apiClient');
+      const backendTrips = await apiClient.getAllTrips();
+      
+      const parseGps = (gpsStr: string | null | undefined): LatLng => {
+        if (!gpsStr) return { lat: 17.3850, lng: 78.4867 };
+        const parts = gpsStr.split(',').map(p => parseFloat(p.trim()));
+        return { lat: parts[0] || 17.3850, lng: parts[1] || 78.4867 };
+      };
+      
+      const mappedTrips = await Promise.all(backendTrips.map(async (bt: any): Promise<VehicleTrip> => {
+        const loadingCoords = parseGps(bt.loading_gps_coordinates);
+        const unloadingCoords = parseGps(bt.unloading_gps_coordinates);
+        
+        let currentStatus: TripStatus = 'PENDING';
+        if (bt.status === 'IN_TRANSIT') {
+          currentStatus = 'Moving';
+        } else if (bt.status === 'COMPLETED') {
+          currentStatus = 'Stopped';
+        }
+        
+        const currentCoords = bt.current_gps_coordinates ? parseGps(bt.current_gps_coordinates) : loadingCoords;
+        
+        // Fetch actual route history coordinates from the backend database for the travelled route
+        let historicalCoords: LatLng[] = [];
+        if (bt.status === 'IN_TRANSIT' || bt.status === 'COMPLETED') {
+          try {
+            historicalCoords = await apiClient.getTripRouteHistory(bt.id);
+          } catch (historyErr) {
+            console.warn(`Failed to fetch history for trip ${bt.id}`, historyErr);
+          }
+        }
+
+        // Generate a route path polyline between origin and destination
+        let routeCoords: LatLng[] = [];
+        if (historicalCoords.length > 0) {
+          routeCoords = [...historicalCoords];
+          // Ensure current coordinate is also appended
+          if (routeCoords.every(c => c.lat !== currentCoords.lat || c.lng !== currentCoords.lng)) {
+            routeCoords.push(currentCoords);
+          }
+        } else {
+          const steps = 30;
+          for (let i = 0; i <= steps; i++) {
+            const ratio = i / steps;
+            routeCoords.push({
+              lat: loadingCoords.lat + (unloadingCoords.lat - loadingCoords.lat) * ratio,
+              lng: loadingCoords.lng + (unloadingCoords.lng - loadingCoords.lng) * ratio
+            });
+          }
+        }
+        
+        return {
+          id: bt.id,
+          bidId: bt.load_id || 'N/A',
+          vehicleNumber: bt.vehicle_number || 'Pending Assignment',
+          driverName: bt.assigned_user?.name || 'Pending Driver',
+          driverPhone: bt.assigned_user?.mobile_number || 'N/A',
+          transporter: bt.assigned_user?.name || 'Pending Carrier',
+          status: currentStatus,
+          speed: currentStatus === 'Moving' ? 65 : 0,
+          eta: currentStatus === 'Moving' ? '4h 15m' : (currentStatus === 'Stopped' ? 'Arrived' : 'Awaiting Dispatch'),
+          origin: { name: bt.loading_address || 'Origin', lat: loadingCoords.lat, lng: loadingCoords.lng },
+          destination: { name: bt.unloading_address || 'Destination', lat: unloadingCoords.lat, lng: unloadingCoords.lng },
+          currentCoords,
+          routeCoords,
+          currentIndex: 0,
+          stops: [],
+          fuel: 85,
+          lastUpdated: 'Just now',
+          timeline: [
+            { time: 'Just Now', event: `Trip record sync active. Telemetry updated.`, status: 'info' }
+          ],
+          deviationAlert: false,
+          unauthorizedStop: false,
+          idleTime: '0 mins',
+          geofences: [
+            { name: 'Loading Hub', radius: 500, lat: loadingCoords.lat, lng: loadingCoords.lng, inside: true },
+            { name: 'Unloading Hub', radius: 500, lat: unloadingCoords.lat, lng: unloadingCoords.lng, inside: false }
+          ]
+        };
+      }));
+      
+      set({ trips: mappedTrips });
+    } catch (error) {
+      console.error("Failed to sync backend trips into tracking store:", error);
+    }
+  },
   setSelectedTripId: (id) => set({ selectedTripId: id }),
   setMapViewMode: (mode) => set({ mapViewMode: mode }),
   setSearchQuery: (query) => set({ searchQuery: query }),
@@ -170,6 +261,7 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
 
     const newTrip: VehicleTrip = {
       id: generatedTripId,
+      bidId: load.bidId || load.bid_id || 'N/A',
       vehicleNumber: bid.vehicleNumber || 'MH-12-KL-3402',
       driverName: bid.transporterName || 'Transporter',
       driverPhone: '+91 98765 43210',

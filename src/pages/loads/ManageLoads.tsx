@@ -117,6 +117,8 @@ export default function ManageLoads() {
   const [loadingGpsInput, setLoadingGpsInput] = useState('');
   const [unloadingGpsInput, setUnloadingGpsInput] = useState('');
   const [isSubmittingAddress, setIsSubmittingAddress] = useState(false);
+  const [isGeocodingLoading, setIsGeocodingLoading] = useState(false);
+  const [isGeocodingUnloading, setIsGeocodingUnloading] = useState(false);
   const [viewingDocTab, setViewingDocTab] = useState<'rc' | 'insurance'>('rc');
   const [rcImgFallback, setRcImgFallback] = useState(false);
   const [insImgFallback, setInsImgFallback] = useState(false);
@@ -291,6 +293,116 @@ export default function ManageLoads() {
       });
     } finally {
       setIsSubmittingAddress(false);
+    }
+  };
+
+  const handleFetchLoadingGps = async () => {
+    if (!loadingAddressInput) return;
+    setIsGeocodingLoading(true);
+    try {
+      const parts = loadingAddressInput.split(',').map(p => p.trim()).filter(Boolean);
+      let foundData = null;
+      let matchedQuery = '';
+
+      for (let i = 0; i < parts.length; i++) {
+        const query = parts.slice(i).join(', ');
+        if (!query) continue;
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`, {
+            headers: {
+              'User-Agent': 'BiofactorLogisticsManager/1.0'
+            }
+          });
+          const data = await res.json();
+          if (data && data.length > 0) {
+            foundData = data[0];
+            matchedQuery = query;
+            break;
+          }
+        } catch (e) {
+          console.warn(`Geocoding fallback failed for: "${query}"`, e);
+        }
+      }
+
+      if (foundData) {
+        setLoadingGpsInput(`${parseFloat(foundData.lat).toFixed(6)}, ${parseFloat(foundData.lon).toFixed(6)}`);
+        toast({
+          title: "GPS Fetched Successfully",
+          description: `Loaded from matched location: "${matchedQuery}"`,
+          className: "bg-emerald-600 text-white font-bold border-none shadow-xl"
+        });
+      } else {
+        toast({
+          title: "GPS Fetch Failed",
+          description: "Address not found in OpenStreetMap database. Please input coordinates manually.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Network Error",
+        description: "Failed to connect to Nominatim OpenStreetMap Geocoding API.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeocodingLoading(false);
+    }
+  };
+
+  const handleFetchUnloadingGps = async () => {
+    if (!unloadingAddressInput) return;
+    setIsGeocodingUnloading(true);
+    try {
+      const parts = unloadingAddressInput.split(',').map(p => p.trim()).filter(Boolean);
+      let foundData = null;
+      let matchedQuery = '';
+
+      for (let i = 0; i < parts.length; i++) {
+        const query = parts.slice(i).join(', ');
+        if (!query) continue;
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&format=json&limit=1`, {
+            headers: {
+              'User-Agent': 'BiofactorLogisticsManager/1.0'
+            }
+          });
+          const data = await res.json();
+          if (data && data.length > 0) {
+            foundData = data[0];
+            matchedQuery = query;
+            break;
+          }
+        } catch (e) {
+          console.warn(`Geocoding fallback failed for: "${query}"`, e);
+        }
+      }
+
+      if (foundData) {
+        setUnloadingGpsInput(`${parseFloat(foundData.lat).toFixed(6)}, ${parseFloat(foundData.lon).toFixed(6)}`);
+        toast({
+          title: "GPS Fetched Successfully",
+          description: `Loaded from matched location: "${matchedQuery}"`,
+          className: "bg-emerald-600 text-white font-bold border-none shadow-xl"
+        });
+      } else {
+        toast({
+          title: "GPS Fetch Failed",
+          description: "Address not found in OpenStreetMap database. Please input coordinates manually.",
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      toast({
+        title: "Network Error",
+        description: "Failed to connect to Nominatim OpenStreetMap Geocoding API.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsGeocodingUnloading(false);
     }
   };
 
@@ -2078,14 +2190,26 @@ export default function ManageLoads() {
                               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                                 <MapPin size={13} className="text-green-500" /> Loading Address
                               </label>
-                              <Input 
-                                value={loadingAddressInput}
-                                onChange={(e) => setLoadingAddressInput(e.target.value)}
-                                placeholder="Enter dispatch pick-up point address..."
-                                className="bg-slate-950 border-slate-800 text-white focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-600 disabled:opacity-75 disabled:cursor-not-allowed"
-                                required
-                                disabled={isDispatched}
-                              />
+                              <div className="flex gap-2">
+                                <Input 
+                                  value={loadingAddressInput}
+                                  onChange={(e) => setLoadingAddressInput(e.target.value)}
+                                  placeholder="Enter dispatch pick-up point address..."
+                                  className="bg-slate-950 border-slate-800 text-white focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-600 disabled:opacity-75 disabled:cursor-not-allowed flex-1"
+                                  required
+                                  disabled={isDispatched}
+                                />
+                                {!isDispatched && (
+                                  <Button
+                                    type="button"
+                                    onClick={handleFetchLoadingGps}
+                                    disabled={isGeocodingLoading}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-3 text-xs shrink-0 rounded-lg active:scale-95"
+                                  >
+                                    {isGeocodingLoading ? "..." : "Fetch GPS"}
+                                  </Button>
+                                )}
+                              </div>
                             </div>
 
                             {/* Unloading Address */}
@@ -2093,14 +2217,26 @@ export default function ManageLoads() {
                               <label className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                                 <MapPin size={13} className="text-red-500" /> Unloading Address
                               </label>
-                              <Input 
-                                value={unloadingAddressInput}
-                                onChange={(e) => setUnloadingAddressInput(e.target.value)}
-                                placeholder="Enter drop-off destination address..."
-                                className="bg-slate-950 border-slate-800 text-white focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-600 disabled:opacity-75 disabled:cursor-not-allowed"
-                                required
-                                disabled={isDispatched}
-                              />
+                              <div className="flex gap-2">
+                                <Input 
+                                  value={unloadingAddressInput}
+                                  onChange={(e) => setUnloadingAddressInput(e.target.value)}
+                                  placeholder="Enter drop-off destination address..."
+                                  className="bg-slate-950 border-slate-800 text-white focus-visible:ring-blue-500 focus-visible:ring-offset-slate-900 placeholder:text-slate-600 disabled:opacity-75 disabled:cursor-not-allowed flex-1"
+                                  required
+                                  disabled={isDispatched}
+                                />
+                                {!isDispatched && (
+                                  <Button
+                                    type="button"
+                                    onClick={handleFetchUnloadingGps}
+                                    disabled={isGeocodingUnloading}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-10 px-3 text-xs shrink-0 rounded-lg active:scale-95"
+                                  >
+                                    {isGeocodingUnloading ? "..." : "Fetch GPS"}
+                                  </Button>
+                                )}
+                              </div>
                             </div>
 
                             {/* Advanced/Auto GPS Coordinates Inputs */}
