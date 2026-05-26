@@ -162,7 +162,38 @@ export default function LiveFleetTrackingPage() {
   useEffect(() => {
     if (!leafletLoaded || !mapRef.current) return;
 
-    trips.forEach((trip) => {
+    // Filter trips to keep only active (Assigned & Dispatched) ones:
+    // - Assigned (status is 'PENDING')
+    // - Dispatched/Active (status is 'Moving', 'Idle', 'Delayed', 'Offline')
+    const activeTrips = trips.filter(t => 
+      t.status === 'PENDING' || 
+      t.status === 'Moving' || 
+      t.status === 'Idle' || 
+      t.status === 'Delayed' || 
+      t.status === 'Offline'
+    );
+
+    // Clear markers/polylines for trips that are no longer active/visible
+    Object.keys(markersRef.current).forEach(id => {
+      if (!activeTrips.some(t => t.id === id)) {
+        mapRef.current.removeLayer(markersRef.current[id]);
+        delete markersRef.current[id];
+      }
+    });
+    Object.keys(polylineRef.current).forEach(id => {
+      if (!activeTrips.some(t => t.id === id)) {
+        mapRef.current.removeLayer(polylineRef.current[id]);
+        delete polylineRef.current[id];
+      }
+    });
+    Object.keys(geofencesRef.current).forEach(id => {
+      if (!activeTrips.some(t => t.id === id)) {
+        geofencesRef.current[id].forEach(layer => mapRef.current.removeLayer(layer));
+        delete geofencesRef.current[id];
+      }
+    });
+
+    activeTrips.forEach((trip) => {
       const { id, currentCoords, vehicleNumber, status, transporter, driverName } = trip;
       const statusColor = 
         status === 'Moving' ? '#10b981' :
@@ -287,6 +318,16 @@ export default function LiveFleetTrackingPage() {
   // Filtering trips
   const filteredTrips = useMemo(() => {
     return trips.filter(t => {
+      // Exclude Completed or Completed-equivalent (Stopped) trips from active live tracking
+      const isAssignedOrDispatched = 
+        t.status === 'PENDING' || 
+        t.status === 'Moving' || 
+        t.status === 'Idle' || 
+        t.status === 'Delayed' || 
+        t.status === 'Offline';
+        
+      if (!isAssignedOrDispatched) return false;
+
       const matchesSearch = 
         t.vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.driverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
