@@ -633,7 +633,7 @@ export default function ManageLoads() {
     const revenue = loads.reduce((sum, l) => {
       if (l.status === 'Completed' || l.status === 'Assigned & Dispatched' || l.status === 'CLOSED') {
         const approvedBid = l.bids?.find(b => b.status === 'ACCEPTED' || b.status === 'Approved' || b.status === 'Selected');
-        return sum + (approvedBid ? approvedBid.bidAmount : (l.totalFreight || 0));
+        return sum + (approvedBid ? (approvedBid.bidAmount * (l.tonnes || 1)) : (l.totalFreight || 0));
       }
       return sum;
     }, 0);
