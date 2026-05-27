@@ -5,7 +5,7 @@
  * Includes automatic failover to local storage and mock data if ngrok is offline.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://anabella-furuncular-tammi.ngrok-free.dev';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://app-transportbiofactor.azurewebsites.net';
 
 // Custom headers to bypass ngrok landing/warning page & support JSON payloads
 const getHeaders = () => {
@@ -491,6 +491,7 @@ export const apiClient = {
   /**
    * Returns current active base URL
    */
-  getApiUrl: () => API_BASE_URL
+ // getApiUrl: () => API_BASE_URL
+ 
 };
 
