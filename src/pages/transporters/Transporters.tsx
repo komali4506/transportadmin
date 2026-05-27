@@ -855,46 +855,6 @@ export default function Transporters() {
                   </div>
                 </div>
 
-                {/* KYC Verification Action Card for Pending status */}
-                {selectedProfile.status === 'Pending' && !isEditing && (
-                  <div className="border border-amber-100 bg-amber-50/20 rounded-xl p-4 space-y-3">
-                    <div className="flex items-center gap-2">
-                      <AlertTriangle className="text-amber-600 h-4 w-4" />
-                      <span className="text-xs font-bold text-amber-800 uppercase tracking-wider">Compliance KYC Actions</span>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-normal">
-                      Please review all uploaded files below. If any files are blurry or incorrect, specify a rejection reason before rejecting.
-                    </p>
-                    
-                    <div className="flex flex-col gap-2 pt-1">
-                      <div className="space-y-1">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase">Rejection Reason</label>
-                        <Input 
-                          value={rejectionReason}
-                          onChange={e => setRejectionReason(e.target.value)}
-                          placeholder="e.g. Aadhaar Card copy is too blurry. Please upload a clear image."
-                          className="bg-white h-9 text-xs font-normal"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 mt-1">
-                        <Button 
-                          onClick={() => handleVerifyUserSubmit(selectedProfile.id, true)}
-                          disabled={isLoading}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-9 uppercase text-[10px] tracking-wider"
-                        >
-                          {isLoading ? "Processing..." : "Approve Carrier"}
-                        </Button>
-                        <Button 
-                          onClick={() => handleVerifyUserSubmit(selectedProfile.id, false)}
-                          disabled={isLoading || !rejectionReason.trim()}
-                          className="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-100 font-bold h-9 uppercase text-[10px] tracking-wider disabled:opacity-50"
-                        >
-                          {isLoading ? "Processing..." : "Reject Carrier"}
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                )}
 
                 {/* Edit Form or Display Specs */}
                 {isEditing ? (
@@ -978,34 +938,6 @@ export default function Transporters() {
                       </div>
                     </div>
 
-                    {/* Tax & Banking Details */}
-                    <div className="space-y-3">
-                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Tax & Settlement Accounts</h4>
-                      <div className="border border-slate-100 rounded-xl p-4.5 space-y-3 text-xs">
-                        <div className="grid grid-cols-2 gap-4 pb-2 border-b">
-                          <div>
-                            <span className="text-[9px] text-slate-400 uppercase font-bold block">PAN Card Registration</span>
-                            <span className="font-bold text-slate-800 font-mono">{selectedProfile.panNumber}</span>
-                          </div>
-                          <div>
-                            <span className="text-[9px] text-slate-400 uppercase font-bold block">GST Identification (GSTIN)</span>
-                            <span className="font-bold text-slate-800 font-mono">{selectedProfile.gstNumber}</span>
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4 pt-1">
-                          <div>
-                            <span className="text-[9px] text-slate-400 uppercase font-bold block">Bank Payout Destination</span>
-                            <span className="font-bold text-slate-800">{selectedProfile.bankName}</span>
-                            <span className="text-[10px] text-slate-500 block font-mono">A/C: {selectedProfile.bankAccount}</span>
-                            <span className="text-[10px] text-slate-400 block font-mono">IFSC: {selectedProfile.ifsc}</span>
-                          </div>
-                          <div>
-                            <span className="text-[9px] text-slate-400 uppercase font-bold block">VPA UPI Address</span>
-                            <span className="font-bold text-slate-800 font-mono">{selectedProfile.upiId}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
 
                     {/* KYC/KYT Document Registry */}
                     <div className="space-y-3">
