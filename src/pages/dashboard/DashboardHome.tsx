@@ -332,7 +332,7 @@ export default function DashboardHome() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase">Freight Value</p>
+                    <p className="text-[10px] text-gray-400 font-bold uppercase">Total Amount</p>
                     <p className="text-sm font-bold text-green-700 font-mono">₹{load.totalFreight.toLocaleString('en-IN')}</p>
                   </div>
                 </div>
