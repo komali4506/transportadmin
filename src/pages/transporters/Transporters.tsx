@@ -825,34 +825,7 @@ export default function Transporters() {
                       {getStatusBadge(selectedProfile.status)}
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    {!isEditing ? (
-                      <Button 
-                        onClick={() => handleEditClick(selectedProfile)}
-                        size="sm" 
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 gap-1.5 h-8 font-bold text-xs uppercase"
-                      >
-                        <Edit2 size={12} /> Edit Details
-                      </Button>
-                    ) : (
-                      <Button 
-                        onClick={() => setIsEditing(false)}
-                        size="sm" 
-                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 gap-1.5 h-8 font-bold text-xs uppercase"
-                      >
-                        Cancel
-                      </Button>
-                    )}
-                    {selectedProfile.status !== 'Blacklisted' && (
-                      <Button 
-                        onClick={() => setBlacklistingTarget(selectedProfile)}
-                        size="sm" 
-                        className="bg-rose-600 hover:bg-rose-700 text-white gap-1.5 h-8 font-bold text-xs uppercase"
-                      >
-                        <ShieldAlert size={12} /> Blacklist
-                      </Button>
-                    )}
-                  </div>
+
                 </div>
 
 
@@ -928,13 +901,7 @@ export default function Transporters() {
                             <span className="font-semibold text-slate-800">{selectedProfile.email}</span>
                           </div>
                         </div>
-                        <div className="flex items-center gap-2 bg-slate-50 p-2.5 rounded-lg col-span-2">
-                          <MapPin size={13} className="text-slate-400" />
-                          <div>
-                            <span className="text-[9px] text-slate-400 uppercase font-bold block">Corporate Address</span>
-                            <span className="font-semibold text-slate-800 leading-snug">{selectedProfile.address}, {selectedProfile.city}, {selectedProfile.state}</span>
-                          </div>
-                        </div>
+
                       </div>
                     </div>
 
