@@ -294,51 +294,7 @@ export default function DashboardHome() {
         </Card>
       </div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
-        {/* Create Load Panel */}
-        <Card className="border-none shadow-sm bg-white overflow-hidden">
-          <div className="bg-green-50 p-6 border-b border-green-100">
-            <h3 className="text-lg font-bold text-green-800 flex items-center gap-2">
-              <PlusCircle size={20} /> Quick Create Load
-            </h3>
-            <p className="text-xs text-green-600/80 mt-1">Post a new load requirement to the marketplace instantly.</p>
-          </div>
-          <CardContent className="p-6">
-            <form className="space-y-4" onSubmit={handleQuickSubmit}>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">From Location</label>
-                  <Input value={quickForm.from} onChange={e => setQuickForm({...quickForm, from: e.target.value})} placeholder="City, State" className="bg-gray-50 border-gray-100 focus-visible:ring-green-500" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">To Location</label>
-                  <Input value={quickForm.to} onChange={e => setQuickForm({...quickForm, to: e.target.value})} placeholder="City, State" className="bg-gray-50 border-gray-100 focus-visible:ring-green-500" />
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-4">
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Quantity (Tonnes)</label>
-                  <Input value={quickForm.quantity} onChange={e => setQuickForm({...quickForm, quantity: e.target.value})} type="number" placeholder="0.00" className="bg-gray-50 border-gray-100 focus-visible:ring-green-500" />
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Base Rate / Tonne</label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">₹</span>
-                    <Input value={quickForm.rate} onChange={e => setQuickForm({...quickForm, rate: e.target.value})} type="number" placeholder="0.00" className="pl-7 bg-gray-50 border-gray-100 focus-visible:ring-green-500" />
-                  </div>
-                </div>
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-600 uppercase">Dispatch Date</label>
-                  <Input value={quickForm.date} onChange={e => setQuickForm({...quickForm, date: e.target.value})} type="date" className="bg-gray-50 border-gray-100 focus-visible:ring-green-500" />
-                </div>
-              </div>
-              <Button type="submit" disabled={isQuickLoading} className="w-full bg-green-600 hover:bg-green-700 text-white mt-4 py-6 font-bold uppercase tracking-wider shadow-md">
-                {isQuickLoading ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Publishing...</> : "Create & Publish Load"}
-              </Button>
-            </form>
-          </CardContent>
-        </Card>
-
+      <div className="mt-2">
         {/* Live Loads Activity */}
         <Card className="border-none shadow-sm bg-white">
           <CardHeader className="flex flex-row items-center justify-between">
