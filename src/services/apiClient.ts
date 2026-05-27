@@ -90,7 +90,8 @@ export const apiClient = {
       endTime: item.end_time || '',
       status: (item.status === 'CLOSED' || item.status === 'ASSIGNED') ? 'CLOSED' : 
               (item.status === 'DISPATCHED' ? 'Assigned & Dispatched' : 
-              (item.status === 'OPEN' ? 'Open' : (item.status || 'Open'))),
+              (item.status === 'COMPLETED' ? 'Completed' :
+              (item.status === 'OPEN' ? 'Open' : (item.status || 'Open')))),
       createdAt: item.created_at || Date.now(),
     }));
   },
