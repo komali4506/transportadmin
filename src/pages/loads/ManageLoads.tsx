@@ -2,7 +2,7 @@ import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
-  Search, Filter, Download, Plus, Eye, Edit, Trash2, ArrowRight,
+  Search, Filter, Download, Plus, Eye, Edit, Trash2, ArrowRight, FolderOpen,
   MapPin, Calendar, Weight, CircleDollarSign, Truck, CheckCircle2,
   Clock, X, BarChart3, TrendingUp, HelpCircle, Star, ShieldCheck, 
   Award, Sparkles, FileSpreadsheet, ChevronRight, AlertTriangle,
@@ -861,9 +861,10 @@ export default function ManageLoads() {
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
           { label: 'Total Loads', val: stats.total, color: 'border-l-blue-500', icon: BarChart3, bg: 'text-blue-500' },
+          { label: 'Open Loads', val: stats.open, color: 'border-l-cyan-500', icon: FolderOpen, bg: 'text-cyan-500' },
           { label: 'Assigned Loads', val: stats.assigned, color: 'border-l-blue-600', icon: Truck, bg: 'text-blue-600' },
           { label: 'Completed Loads', val: stats.completed, color: 'border-l-gray-400', icon: CheckCircle2, bg: 'text-gray-500' },
           { label: 'Money Spend', val: formatRevenue(stats.revenue), color: 'border-l-green-600', icon: CircleDollarSign, bg: 'text-green-600 font-mono' },

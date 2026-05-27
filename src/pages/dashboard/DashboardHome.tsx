@@ -12,7 +12,8 @@ import {
   Clock,
   CircleDollarSign,
   Loader2,
-  HelpCircle
+  HelpCircle,
+  FolderOpen
 } from 'lucide-react'
 import { 
   PieChart, 
@@ -182,7 +183,7 @@ export default function DashboardHome() {
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         <KPICard 
           title="Total Loads" 
           value={stats.total} 
@@ -190,6 +191,14 @@ export default function DashboardHome() {
           trend={8} 
           trendType="up" 
           color="bg-blue-600" 
+        />
+        <KPICard 
+          title="Open Loads" 
+          value={stats.open} 
+          icon={FolderOpen} 
+          trend={5} 
+          trendType="up" 
+          color="bg-cyan-500" 
         />
         <KPICard 
           title="Assigned Loads" 
