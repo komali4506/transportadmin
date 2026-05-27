@@ -10,38 +10,45 @@ interface AuthState {
   initializeAuth: () => void;
 }
 
-export const useAuthStore = create<AuthState>((set) => ({
-  isAuthenticated: true, // Default to true for instant demo access
-  isLoading: false,
-  token: null,
-
-  login: (token: string) => {
-    localStorage.setItem('biofactor_auth_token', token);
-    set({ isAuthenticated: true, token });
-  },
-
-  logout: async () => {
-    set({ isLoading: true });
-    try {
-      await authService.logoutAdmin();
-      set({ isAuthenticated: false, token: null });
-    } catch (error) {
-      console.error("Logout failed:", error);
-    } finally {
-      set({ isLoading: false });
-    }
-  },
-
-  initializeAuth: () => {
-    const token = localStorage.getItem('biofactor_auth_token');
-    if (token) {
-      set({ isAuthenticated: true, token });
-    } else {
-      // For demo purposes, auto-login with a mock token if none exists,
-      // so the user doesn't hit a blank screen initially.
-      const mockToken = 'mock_jwt_token_biofactor_superadmin';
-      localStorage.setItem('biofactor_auth_token', mockToken);
-      set({ isAuthenticated: true, token: mockToken });
-    }
+const getInitialToken = () => {
+  if (typeof window !== 'undefined') {
+    return localStorage.getItem('biofactor_auth_token');
   }
-}));
+  return null;
+};
+
+export const useAuthStore = create<AuthState>((set) => {
+  const initialToken = getInitialToken();
+  
+  return {
+    isAuthenticated: !!initialToken,
+    isLoading: false,
+    token: initialToken,
+
+    login: (token: string) => {
+      localStorage.setItem('biofactor_auth_token', token);
+      set({ isAuthenticated: true, token });
+    },
+
+    logout: async () => {
+      set({ isLoading: true });
+      try {
+        await authService.logoutAdmin();
+        set({ isAuthenticated: false, token: null });
+      } catch (error) {
+        console.error("Logout failed:", error);
+      } finally {
+        set({ isLoading: false });
+      }
+    },
+
+    initializeAuth: () => {
+      const token = localStorage.getItem('biofactor_auth_token');
+      if (token) {
+        set({ isAuthenticated: true, token });
+      } else {
+        set({ isAuthenticated: false, token: null });
+      }
+    }
+  };
+});

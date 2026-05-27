@@ -626,7 +626,7 @@ export const ProfileSettingsPage: React.FC = () => {
                       {/* Row 1 */}
                       <tr>
                         <td className="py-4">
-                          <p className="text-sm font-bold text-gray-800">New Load Publishing</p>
+                          <p className="text-sm font-bold text-gray-800">New Bid Publishing</p>
                           <p className="text-xs text-gray-400">Triggered whenever a dispatcher publishes a new freight load request.</p>
                         </td>
                         <td className="py-4 text-center">

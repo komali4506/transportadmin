@@ -455,102 +455,24 @@ export default function ManageLoads() {
   const filteredBids = useMemo(() => {
     if (!selectedLoad || !selectedLoad.bids) return [];
     
-    // Transform / enrich bids to show a mix of Transporters and Drivers dynamically
-    let list = selectedLoad.bids.map((bid, idx) => {
-      // If we are connected to the live backend API, display real names and roles exactly as submitted
-      if (connectionMode === 'live') {
-        const isDriver = bid.role ? (bid.role.toLowerCase() === 'driver') : false;
-        return {
-          ...bid,
-          role: isDriver ? ('Driver' as const) : ('Transporter' as const),
-          transporterName: bid.transporterName || 'Carrier',
-          transporterDetails: {
-            companyName: bid.transporterName || 'Carrier',
-            ownerName: bid.transporterDetails?.ownerName || bid.transporterName || 'Owner',
-            fleetSize: Number(bid.transporterDetails?.fleetSize || (isDriver ? 1 : 10)),
-            completedTrips: Number(bid.transporterDetails?.completedTrips || 100),
-            insuranceValidity: bid.transporterDetails?.insuranceValidity || 'Valid',
-            kycStatus: bid.transporterDetails?.kycStatus || 'Verified',
-            rating: Number(bid.driverRating || 4.5),
-            experienceYears: Number(bid.experienceYears || 5),
-            role: isDriver ? ('Driver' as const) : ('Transporter' as const)
-          }
-        };
-      }
-
-      // Otherwise, fallback to the demo offline mock generation
-      const isDriver = idx % 2 !== 0;
-      
-      const corporateNames = [
-        'FastFreight Solutions',
-        'SafeWay Express',
-        'BlueDart Road Carrier',
-        'Agarwal Premium Movers',
-        'VRL Logistics Ltd',
-        'Gati Freight Services',
-        'TCI Transport Corporation'
-      ];
-      
-      const driverNames = [
-        'Ramesh Sharma',
-        'Vikram Singh',
-        'Anil Mehta',
-        'Suresh Agarwal',
-        'Vijay Sankeshwar',
-        'Rajesh Gupta',
-        'Mohit Chawla'
-      ];
-
-      const isGeneric = 
-        bid.transporterName.toLowerCase() === 'transporter' || 
-        bid.transporterName.toLowerCase() === 'owner' || 
-        bid.transporterDetails?.ownerName?.toLowerCase() === 'owner' ||
-        bid.transporterDetails?.ownerName?.toLowerCase() === 'transporter';
-
-      if (isDriver) {
-        const driverName = isGeneric 
-          ? driverNames[idx % driverNames.length] 
-          : (bid.transporterDetails?.ownerName && bid.transporterDetails.ownerName.toLowerCase() !== 'owner' 
-              ? bid.transporterDetails.ownerName 
-              : bid.transporterName);
-              
-        return {
-          ...bid,
-          role: 'Driver' as const,
-          transporterName: driverName,
-          transporterDetails: {
-            ...bid.transporterDetails,
-            companyName: driverName,
-            ownerName: 'Self-Employed Driver',
-            fleetSize: 1,
-            completedTrips: bid.transporterDetails?.completedTrips || 120,
-            insuranceValidity: 'Insurance Valid',
-            kycStatus: 'Verified',
-            rating: bid.driverRating,
-            experienceYears: bid.experienceYears,
-            role: 'Driver' as const
-          }
-        };
-      } else {
-        const companyName = isGeneric 
-          ? corporateNames[idx % corporateNames.length] 
-          : bid.transporterName;
-        const ownerName = isGeneric 
-          ? driverNames[(idx + 3) % driverNames.length] 
-          : (bid.transporterDetails?.ownerName || 'Owner');
-
-        return {
-          ...bid,
-          role: 'Transporter' as const,
-          transporterName: companyName,
-          transporterDetails: {
-            ...bid.transporterDetails,
-            companyName: companyName,
-            ownerName: ownerName,
-            role: 'Transporter' as const
-          }
-        };
-      }
+    let list = selectedLoad.bids.map((bid) => {
+      const isDriver = bid.role ? (bid.role.toLowerCase() === 'driver') : false;
+      return {
+        ...bid,
+        role: isDriver ? ('Driver' as const) : ('Transporter' as const),
+        transporterName: bid.transporterName || 'Carrier',
+        transporterDetails: {
+          companyName: bid.transporterName || 'Carrier',
+          ownerName: bid.transporterDetails?.ownerName || bid.transporterName || 'Owner',
+          fleetSize: Number(bid.transporterDetails?.fleetSize || (isDriver ? 1 : 10)),
+          completedTrips: Number(bid.transporterDetails?.completedTrips || 100),
+          insuranceValidity: bid.transporterDetails?.insuranceValidity || 'Valid',
+          kycStatus: bid.transporterDetails?.kycStatus || 'Verified',
+          rating: Number(bid.driverRating || 4.5),
+          experienceYears: Number(bid.experienceYears || 5),
+          role: isDriver ? ('Driver' as const) : ('Transporter' as const)
+        }
+      };
     });
     // Normalize status according to the load's overall operational status.
     // If the load is Open/Negotiation/Awaiting, then no bid is approved yet. Force all bids to 'Pending' (unless Negotiating).
@@ -854,7 +776,7 @@ export default function ManageLoads() {
           </Button>
           <Link to="/create-load">
             <Button className="gap-2 bg-green-600 hover:bg-green-700 text-white shadow-md transition-all active:scale-95">
-              <Plus size={16} /> New Load
+              <Plus size={16} /> New Bid
             </Button>
           </Link>
         </div>
@@ -1167,11 +1089,11 @@ export default function ManageLoads() {
                         <span className="font-bold text-slate-800">{selectedLoad.dispatchDate}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Load End Date:</span>
+                        <span className="text-slate-400">Bid End Date:</span>
                         <span className="font-bold text-slate-800">{selectedLoad.endDate || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Load End Time:</span>
+                        <span className="text-slate-400">Bid End Time:</span>
                         <span className="font-bold text-slate-800">{selectedLoad.endTime || 'N/A'}</span>
                       </div>
                       <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between items-center">

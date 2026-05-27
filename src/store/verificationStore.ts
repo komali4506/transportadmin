@@ -17,7 +17,7 @@ interface VerificationState {
 
 export const useVerificationStore = create<VerificationState>((set) => ({
   activeDocType: 'gstCert',
-  activeDocUrl: '/mock-docs/gst_verified.jpg',
+  activeDocUrl: '',
   activeDocName: 'GST Registration Certificate',
   zoomLevel: 100,
   isScanning: false,
@@ -36,7 +36,7 @@ export const useVerificationStore = create<VerificationState>((set) => ({
 
   resetVerification: () => set({
     activeDocType: 'gstCert',
-    activeDocUrl: '/mock-docs/gst_verified.jpg',
+    activeDocUrl: '',
     activeDocName: 'GST Registration Certificate',
     zoomLevel: 100,
     isScanning: false,

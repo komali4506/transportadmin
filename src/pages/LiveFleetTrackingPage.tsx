@@ -48,7 +48,6 @@ export default function LiveFleetTrackingPage() {
     triggerEmergency,
     dismissAlert,
     reassignVehicle,
-    simulateGpsMovement,
     fetchTrips
   } = useTrackingStore();
 
@@ -61,7 +60,6 @@ export default function LiveFleetTrackingPage() {
     return () => clearInterval(interval);
   }, [fetchTrips]);
 
-  const [simulationActive, setSimulationActive] = useState(true);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
   const [reassignInput, setReassignInput] = useState('');
   const [isReassigning, setIsReassigning] = useState(false);
@@ -306,16 +304,7 @@ export default function LiveFleetTrackingPage() {
     }
   }, [selectedTripId, leafletLoaded, trips]);
 
-  // Simulation timer loop
-  useEffect(() => {
-    if (!simulationActive) return;
 
-    const interval = setInterval(() => {
-      simulateGpsMovement();
-    }, 4000);
-
-    return () => clearInterval(interval);
-  }, [simulationActive, simulateGpsMovement]);
 
   // Dynamic Map Renderer for Individual Bid Tracking inside Details Drawer
   useEffect(() => {
@@ -654,20 +643,7 @@ export default function LiveFleetTrackingPage() {
           <p className="text-sm text-slate-500 mt-1">Monitor active transporter vehicles, driver routes, stoppages, and live logistics movement.</p>
         </div>
         
-        {/* Simulation controller widget */}
-        <div className="flex items-center gap-2 bg-slate-50 border p-1.5 rounded-xl self-start">
-          <Badge className={`${simulationActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'} text-white border-none text-[9px] uppercase px-2 py-0.5`}>
-            {simulationActive ? 'GPS SIMULATOR ACTIVE' : 'GPS PAUSED'}
-          </Badge>
-          <Button 
-            size="icon" 
-            variant="ghost" 
-            className="h-7 w-7 text-slate-600 rounded-lg hover:bg-slate-200"
-            onClick={() => setSimulationActive(!simulationActive)}
-          >
-            {simulationActive ? <Pause size={12} /> : <Play size={12} />}
-          </Button>
-        </div>
+
       </div>
 
       {/* Top GPS Analytics Cards */}

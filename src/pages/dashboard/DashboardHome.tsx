@@ -176,7 +176,7 @@ export default function DashboardHome() {
         <div className="flex items-center gap-3">
           <Link to="/create-load">
             <Button className="bg-green-600 hover:bg-green-700 text-white gap-2 shadow-md">
-              <PlusCircle size={18} /> Create New Load
+              <PlusCircle size={18} /> Create New Bid
             </Button>
           </Link>
         </div>

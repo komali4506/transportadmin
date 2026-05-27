@@ -173,7 +173,7 @@ export default function CreateLoadPage() {
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Create New Load</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Create New Bid</h1>
           <p className="text-sm text-gray-500 font-medium">Create and publish a new transportation bid with dynamic routing.</p>
         </div>
       </div>
@@ -305,7 +305,7 @@ export default function CreateLoadPage() {
                   <div className="space-y-5">
                     {/* Reference ID */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-600 uppercase">Load ID</label>
+                      <label className="text-xs font-bold text-gray-600 uppercase">Bid ID</label>
                       <Input 
                         name="bidId"
                         value={formData.bidId}
@@ -331,11 +331,11 @@ export default function CreateLoadPage() {
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">
-                      {/* Load End Date */}
+                      {/* Bid End Date */}
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                          Load End Date <span className="text-red-500">*</span>
+                          Bid End Date <span className="text-red-500">*</span>
                         </label>
                         <Input 
                           type="date"
@@ -347,11 +347,11 @@ export default function CreateLoadPage() {
                         {errors.endDate && <p className="text-xs text-red-500 animate-in fade-in">{errors.endDate}</p>}
                       </div>
 
-                      {/* Load End Time */}
+                      {/* Bid End Time */}
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
                           <Clock className="w-3.5 h-3.5 text-gray-400" />
-                          Load End Time <span className="text-red-500">*</span>
+                          Bid End Time <span className="text-red-500">*</span>
                         </label>
                         <Input 
                           type="time"

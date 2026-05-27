@@ -30,7 +30,7 @@ export const apiClient = {
   checkConnection: async (): Promise<APIConnectionStatus> => {
     try {
       const controller = new AbortController();
-      const id = setTimeout(() => controller.abort(), 3500); // 3.5s timeout for fast UI response
+      const id = setTimeout(() => controller.abort(), 1500); // 1.5s timeout for fast UI response
 
       // Ping open bidding feed endpoint for health check
       const response = await fetch(`${API_BASE_URL}/api/loads/active`, {

@@ -79,7 +79,6 @@ interface TrackingState {
   triggerEmergency: (tripId: string) => void;
   dismissAlert: (alertId: string) => void;
   reassignVehicle: (tripId: string, newVehicleNo: string) => void;
-  simulateGpsMovement: () => void;
   createTripFromLoad: (load: any, bid: any) => void;
   dispatchTripDetails: (tripId: string, dispatchPayload: any) => Promise<void>;
   fetchTrips: () => Promise<void>;
@@ -123,33 +122,15 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
 
         const currentCoords = bt.current_gps_coordinates ? parseGps(bt.current_gps_coordinates) : loadingCoords;
 
-        // Fetch actual route history coordinates from the backend database for the travelled route
-        let historicalCoords: LatLng[] = [];
-        if (bt.status === 'IN_TRANSIT' || bt.status === 'COMPLETED') {
-          try {
-            historicalCoords = await apiClient.getTripRouteHistory(bt.id);
-          } catch (historyErr) {
-            console.warn(`Failed to fetch history for trip ${bt.id}`, historyErr);
-          }
-        }
-
-        // Generate a route path polyline between origin and destination
-        let routeCoords: LatLng[] = [];
-        if (historicalCoords.length > 0) {
-          routeCoords = [...historicalCoords];
-          // Ensure current coordinate is also appended
-          if (routeCoords.every(c => c.lat !== currentCoords.lat || c.lng !== currentCoords.lng)) {
-            routeCoords.push(currentCoords);
-          }
-        } else {
-          const steps = 30;
-          for (let i = 0; i <= steps; i++) {
-            const ratio = i / steps;
-            routeCoords.push({
-              lat: loadingCoords.lat + (unloadingCoords.lat - loadingCoords.lat) * ratio,
-              lng: loadingCoords.lng + (unloadingCoords.lng - loadingCoords.lng) * ratio
-            });
-          }
+        // Generate a route path polyline between origin and destination by default
+        const routeCoords: LatLng[] = [];
+        const steps = 30;
+        for (let i = 0; i <= steps; i++) {
+          const ratio = i / steps;
+          routeCoords.push({
+            lat: loadingCoords.lat + (unloadingCoords.lat - loadingCoords.lat) * ratio,
+            lng: loadingCoords.lng + (unloadingCoords.lng - loadingCoords.lng) * ratio
+          });
         }
 
         const tonnes = bt.load?.number_of_tonnes || 20;
@@ -198,7 +179,33 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
       console.error("Failed to sync backend trips into tracking store:", error);
     }
   },
-  setSelectedTripId: (id) => set({ selectedTripId: id }),
+  setSelectedTripId: async (id) => {
+    set({ selectedTripId: id });
+    if (id) {
+      try {
+        const { apiClient } = await import('@/services/apiClient');
+        const historicalCoords = await apiClient.getTripRouteHistory(id);
+        if (historicalCoords && historicalCoords.length > 0) {
+          set((state) => {
+            const updatedTrips = state.trips.map((t) => {
+              if (t.id === id) {
+                const coords = [...historicalCoords];
+                // Ensure current coordinate is appended to historical coords
+                if (coords.every(c => c.lat !== t.currentCoords.lat || c.lng !== t.currentCoords.lng)) {
+                  coords.push(t.currentCoords);
+                }
+                return { ...t, routeCoords: coords };
+              }
+              return t;
+            });
+            return { trips: updatedTrips };
+          });
+        }
+      } catch (err) {
+        console.warn(`Failed to fetch route history for trip ${id}`, err);
+      }
+    }
+  },
   setMapViewMode: (mode) => set({ mapViewMode: mode }),
   setSearchQuery: (query) => set({ searchQuery: query }),
   setStatusFilter: (filter) => set({ statusFilter: filter }),
@@ -242,37 +249,7 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
       return t;
     })
   })),
-  simulateGpsMovement: () => set((state) => {
-    const updatedTrips = state.trips.map((trip) => {
-      if (trip.status === 'Moving') {
-        const nextIndex = (trip.currentIndex + 1) % trip.routeCoords.length;
-        const nextCoords = trip.routeCoords[nextIndex];
 
-        // Randomly calculate speed fluctuate around 60-75 km/h
-        const simulatedSpeed = Math.floor(60 + Math.random() * 15);
-
-        // Countdowns fuel slowly
-        const nextFuel = Math.max(5, trip.fuel - 1);
-
-        // Update ETA string
-        const remainingHours = Math.max(1, trip.routeCoords.length - nextIndex);
-        const nextEta = `${remainingHours}h ${Math.floor(10 + Math.random() * 45)}m`;
-
-        return {
-          ...trip,
-          currentIndex: nextIndex,
-          currentCoords: nextCoords,
-          speed: simulatedSpeed,
-          fuel: nextFuel,
-          eta: nextEta,
-          lastUpdated: 'Just now',
-        };
-      }
-      return trip;
-    });
-
-    return { trips: updatedTrips };
-  }),
   createTripFromLoad: (load: any, bid: any) => {
     const suffix = load.id.split('-')[1] || '1001';
     const generatedTripId = `TRIP-2026-${suffix}`;

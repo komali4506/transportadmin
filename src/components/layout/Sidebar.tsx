@@ -24,7 +24,7 @@ const menuItems = [
     { name: "Overview", icon: LayoutDashboard, path: "/" }
   ]},
   { group: "LOADS", items: [
-    { name: "Create Load", icon: MapPin, path: "/create-load" },
+    { name: "Create Bid", icon: MapPin, path: "/create-load" },
     { name: "Manage Loads", icon: ClipboardList, path: "/loads" }
   ]},
   { group: "FLEET TRACKING", items: [
