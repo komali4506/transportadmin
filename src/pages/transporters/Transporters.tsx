@@ -651,8 +651,6 @@ export default function Transporters() {
                     <option value="All">All Carriers</option>
                     <option value="Pending">Pending Review</option>
                     <option value="Approved">Verified KYC</option>
-                    <option value="Under Review">Under Review</option>
-                    <option value="Blacklisted">Blacklisted</option>
                     <option value="Expired Documents">Expired Documents</option>
                   </select>
                 </div>
