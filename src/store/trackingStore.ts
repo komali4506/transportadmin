@@ -45,6 +45,12 @@ export interface VehicleTrip {
   unauthorizedStop: boolean;
   idleTime: string;
   geofences: { name: string; radius: number; lat: number; lng: number; inside: boolean }[];
+  pricePerTonne?: number;
+  tonnes?: number;
+  bidAmount?: number;
+  fromLoc?: string;
+  toLoc?: string;
+  loadStops?: string[];
 }
 
 export interface LiveAlert {
@@ -91,26 +97,32 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
     try {
       const { apiClient } = await import('@/services/apiClient');
       const backendTrips = await apiClient.getAllTrips();
-      
+
       const parseGps = (gpsStr: string | null | undefined): LatLng => {
         if (!gpsStr) return { lat: 17.3850, lng: 78.4867 };
         const parts = gpsStr.split(',').map(p => parseFloat(p.trim()));
         return { lat: parts[0] || 17.3850, lng: parts[1] || 78.4867 };
       };
-      
-      const mappedTrips = await Promise.all(backendTrips.map(async (bt: any): Promise<VehicleTrip> => {
+
+      // Filter to only include trips that are actually active/dispatched (IN_TRANSIT or DISPATCHED load status)
+      const activeTrips = backendTrips.filter((bt: any) => {
+        const loadStatus = bt.load?.status?.toUpperCase();
+        return loadStatus === 'DISPATCHED' || bt.status === 'IN_TRANSIT';
+      });
+
+      const mappedTrips = await Promise.all(activeTrips.map(async (bt: any): Promise<VehicleTrip> => {
         const loadingCoords = parseGps(bt.loading_gps_coordinates);
         const unloadingCoords = parseGps(bt.unloading_gps_coordinates);
-        
+
         let currentStatus: TripStatus = 'PENDING';
         if (bt.status === 'IN_TRANSIT') {
           currentStatus = 'Moving';
         } else if (bt.status === 'COMPLETED') {
           currentStatus = 'Stopped';
         }
-        
+
         const currentCoords = bt.current_gps_coordinates ? parseGps(bt.current_gps_coordinates) : loadingCoords;
-        
+
         // Fetch actual route history coordinates from the backend database for the travelled route
         let historicalCoords: LatLng[] = [];
         if (bt.status === 'IN_TRANSIT' || bt.status === 'COMPLETED') {
@@ -139,7 +151,11 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
             });
           }
         }
-        
+
+        const tonnes = bt.load?.number_of_tonnes || 20;
+        const bidAmount = bt.amount || bt.load?.base_bid_amount || (1200 * tonnes);
+        const pricePerTonne = tonnes > 0 ? Math.round(bidAmount / tonnes) : (bt.load?.cost_per_tonne || 1200);
+
         return {
           id: bt.id,
           bidId: bt.load_id || 'N/A',
@@ -167,10 +183,16 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
           geofences: [
             { name: 'Loading Hub', radius: 500, lat: loadingCoords.lat, lng: loadingCoords.lng, inside: true },
             { name: 'Unloading Hub', radius: 500, lat: unloadingCoords.lat, lng: unloadingCoords.lng, inside: false }
-          ]
+          ],
+          pricePerTonne,
+          tonnes,
+          bidAmount,
+          fromLoc: bt.load?.from_location || bt.loading_address || 'Origin',
+          toLoc: bt.load?.to_location || bt.unloading_address || 'Destination',
+          loadStops: Array.isArray(bt.load?.routes) ? bt.load.routes : (bt.load?.stops || [])
         };
       }));
-      
+
       set({ trips: mappedTrips });
     } catch (error) {
       console.error("Failed to sync backend trips into tracking store:", error);
@@ -225,10 +247,10 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
       if (trip.status === 'Moving') {
         const nextIndex = (trip.currentIndex + 1) % trip.routeCoords.length;
         const nextCoords = trip.routeCoords[nextIndex];
-        
+
         // Randomly calculate speed fluctuate around 60-75 km/h
         const simulatedSpeed = Math.floor(60 + Math.random() * 15);
-        
+
         // Countdowns fuel slowly
         const nextFuel = Math.max(5, trip.fuel - 1);
 
@@ -254,7 +276,7 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
   createTripFromLoad: (load: any, bid: any) => {
     const suffix = load.id.split('-')[1] || '1001';
     const generatedTripId = `TRIP-2026-${suffix}`;
-    
+
     // Check if trip already exists
     const existing = get().trips.find(t => t.id === generatedTripId);
     if (existing) return;
@@ -283,7 +305,10 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
       deviationAlert: false,
       unauthorizedStop: false,
       idleTime: '0 mins',
-      geofences: []
+      geofences: [],
+      fromLoc: load.from || 'Origin',
+      toLoc: load.to || 'Destination',
+      loadStops: load.stops || []
     };
 
     set((state) => ({
@@ -314,15 +339,15 @@ export const useTrackingStore = create<TrackingState>((set, get) => ({
         if (t.id === tripId) {
           return {
             ...t,
-            origin: { 
-              name: dispatchPayload.loading_address || dispatchPayload.loadingAddress || t.origin.name, 
-              lat: loadingCoords.lat, 
-              lng: loadingCoords.lng 
+            origin: {
+              name: dispatchPayload.loading_address || dispatchPayload.loadingAddress || t.origin.name,
+              lat: loadingCoords.lat,
+              lng: loadingCoords.lng
             },
-            destination: { 
-              name: dispatchPayload.unloading_address || dispatchPayload.unloadingAddress || t.destination.name, 
-              lat: unloadingCoords.lat, 
-              lng: unloadingCoords.lng 
+            destination: {
+              name: dispatchPayload.unloading_address || dispatchPayload.unloadingAddress || t.destination.name,
+              lat: unloadingCoords.lat,
+              lng: unloadingCoords.lng
             },
             currentCoords: loadingCoords,
             routeCoords,

@@ -23,6 +23,7 @@ export interface APIConnectionStatus {
 }
 
 export const apiClient = {
+  getApiUrl: () => API_BASE_URL,
   /**
    * Pings the backend to verify if it is online and reachable.
    */
@@ -104,6 +105,8 @@ export const apiClient = {
       to_location: loadData.to,
       routes: loadData.stops || [],
       dispatch_date: loadData.dispatchDate,
+      end_date: loadData.endDate,
+      end_time: loadData.endTime,
       number_of_tonnes: Number(loadData.tonnes),
       cost_per_tonne: Number(loadData.ratePerTonne),
       base_bid_amount: Number(loadData.totalFreight),
@@ -390,6 +393,27 @@ export const apiClient = {
   },
 
   /**
+   * Submits Admin review choice for a specific transporter truck document (POST /api/admin/verify-truck/{truck_id})
+   */
+  verifyTruck: async (truckId: string, docType: 'RC' | 'INSURANCE', status: 'APPROVED' | 'REJECTED', rejectionReason?: string): Promise<any> => {
+    const payload: any = {
+      doc_type: docType,
+      status,
+      rejection_reason: rejectionReason || ''
+    };
+
+    const response = await fetch(`${API_BASE_URL}/api/admin/verify-truck/${truckId}`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to verify truck document: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  /**
    * Retrieves registered user details and KYC documents (GET /api/auth/profile/{user_id})
    */
   getProfileDetails: async (userId: string): Promise<any> => {
@@ -430,7 +454,42 @@ export const apiClient = {
   },
 
   /**
+   * Fetches all invoices submitted by drivers/transporters or already paid (GET /api/trips/admin/invoices/all)
+   */
+  getAdminInvoices: async (): Promise<any[]> => {
+    const response = await fetch(`${API_BASE_URL}/api/trips/admin/invoices/all`, {
+      method: 'GET',
+      headers: getHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch admin invoices: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Settle and pay a submitted invoice (POST /api/trips/admin/invoice/{trip_id}/pay)
+   */
+  payTripInvoice: async (tripId: string, payload: { paymentMethod: string; extraCharges: number }): Promise<any> => {
+    const snakePayload = {
+      payment_method: payload.paymentMethod,
+      extra_charges: payload.extraCharges
+    };
+
+    const response = await fetch(`${API_BASE_URL}/api/trips/admin/invoice/${tripId}/pay`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify(snakePayload),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to settle payment for trip: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  /**
    * Returns current active base URL
    */
   getApiUrl: () => API_BASE_URL
 };
+

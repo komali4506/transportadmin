@@ -80,6 +80,8 @@ export default function LiveFleetTrackingPage() {
   const markersRef = useRef<{ [key: string]: any }>({});
   const polylineRef = useRef<{ [key: string]: any }>({});
   const geofencesRef = useRef<{ [key: string]: any[] }>({});
+  const modalMapContainerRef = useRef<HTMLDivElement>(null);
+  const modalMapRef = useRef<any>(null);
 
   // Parse direct sub-tabs from URL query
   useEffect(() => {
@@ -162,39 +164,28 @@ export default function LiveFleetTrackingPage() {
   useEffect(() => {
     if (!leafletLoaded || !mapRef.current) return;
 
-    // Filter trips to keep only active (Assigned & Dispatched) ones:
-    // - Assigned (status is 'PENDING')
-    // - Dispatched/Active (status is 'Moving', 'Idle', 'Delayed', 'Offline')
-    const activeTrips = trips.filter(t => 
-      t.status === 'PENDING' || 
-      t.status === 'Moving' || 
-      t.status === 'Idle' || 
-      t.status === 'Delayed' || 
-      t.status === 'Offline'
-    );
-
-    // Clear markers/polylines for trips that are no longer active/visible
-    Object.keys(markersRef.current).forEach(id => {
-      if (!activeTrips.some(t => t.id === id)) {
-        mapRef.current.removeLayer(markersRef.current[id]);
-        delete markersRef.current[id];
-      }
-    });
-    Object.keys(polylineRef.current).forEach(id => {
-      if (!activeTrips.some(t => t.id === id)) {
-        mapRef.current.removeLayer(polylineRef.current[id]);
-        delete polylineRef.current[id];
-      }
-    });
-    Object.keys(geofencesRef.current).forEach(id => {
-      if (!activeTrips.some(t => t.id === id)) {
-        geofencesRef.current[id].forEach(layer => mapRef.current.removeLayer(layer));
-        delete geofencesRef.current[id];
-      }
-    });
-
-    activeTrips.forEach((trip) => {
+    trips.forEach((trip) => {
       const { id, currentCoords, vehicleNumber, status, transporter, driverName } = trip;
+
+      // If a specific trip is selected, hide all other trips' markers, polylines, and geofences
+      if (selectedTripId && id !== selectedTripId) {
+        if (markersRef.current[id]) {
+          mapRef.current.removeLayer(markersRef.current[id]);
+          delete markersRef.current[id];
+        }
+        if (polylineRef.current[id]) {
+          mapRef.current.removeLayer(polylineRef.current[id]);
+          delete polylineRef.current[id];
+        }
+        if (geofencesRef.current[id]) {
+          geofencesRef.current[id].forEach((fence: any) => {
+            mapRef.current.removeLayer(fence);
+          });
+          delete geofencesRef.current[id];
+        }
+        return;
+      }
+
       const statusColor = 
         status === 'Moving' ? '#10b981' :
         status === 'Stopped' ? '#64748b' :
@@ -290,16 +281,27 @@ export default function LiveFleetTrackingPage() {
         });
       }
     });
-  }, [trips, leafletLoaded, setSelectedTripId]);
+  }, [trips, leafletLoaded, setSelectedTripId, selectedTripId]);
 
-  // Center Map on Selected Vehicle
+  // Fit Map to show complete Loading GPS (Origin) and Unloading GPS (Destination) route bounds
   useEffect(() => {
     if (!selectedTripId || !leafletLoaded || !mapRef.current) return;
     const selected = trips.find(t => t.id === selectedTripId);
     if (selected) {
-      mapRef.current.setView([selected.currentCoords.lat, selected.currentCoords.lng], 8, {
+      // Construct bounds from Loading GPS (Origin) to Unloading GPS (Destination)
+      const bounds = window.L.latLngBounds([
+        [selected.origin.lat, selected.origin.lng],
+        [selected.destination.lat, selected.destination.lng]
+      ]);
+
+      // Expand bounds to also include the current location of the vehicle
+      bounds.extend([selected.currentCoords.lat, selected.currentCoords.lng]);
+
+      // Fit map view to these bounds with padding so origin and destination are both fully visible
+      mapRef.current.fitBounds(bounds, {
+        padding: [60, 60],
         animate: true,
-        duration: 1
+        duration: 1.2
       });
     }
   }, [selectedTripId, leafletLoaded, trips]);
@@ -315,19 +317,126 @@ export default function LiveFleetTrackingPage() {
     return () => clearInterval(interval);
   }, [simulationActive, simulateGpsMovement]);
 
+  // Dynamic Map Renderer for Individual Bid Tracking inside Details Drawer
+  useEffect(() => {
+    if (!leafletLoaded) return;
+    
+    if (selectedTripId) {
+      const selected = trips.find(t => t.id === selectedTripId);
+      if (!selected) return;
+      
+      const timer = setTimeout(() => {
+        if (!modalMapContainerRef.current) return;
+        
+        // Destroy pre-existing map instance to avoid Leaflet "Map container is already initialized" error
+        if (modalMapRef.current) {
+          modalMapRef.current.remove();
+          modalMapRef.current = null;
+        }
+        
+        // Initialize individual Leaflet map
+        const map = window.L.map(modalMapContainerRef.current, {
+          zoomControl: false,
+        });
+        modalMapRef.current = map;
+        
+        // Apply standard OpenStreetMap tile layer
+        window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+        
+        window.L.control.zoom({
+          position: 'bottomright'
+        }).addTo(map);
+
+        const statusColor = 
+          selected.status === 'Moving' ? '#10b981' :
+          selected.status === 'Stopped' ? '#64748b' :
+          selected.status === 'Delayed' ? '#f43f5e' :
+          selected.status === 'Idle' ? '#f59e0b' :
+          selected.status === 'Offline' ? '#94a3b8' : '#3b82f6';
+
+        // 1. Draw Loading Point (Origin)
+        window.L.marker([selected.origin.lat, selected.origin.lng], {
+          icon: window.L.divIcon({
+            html: `<div class="h-6 w-6 bg-blue-600 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white shadow-md">S</div>`,
+            className: 'custom-div-icon',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          })
+        }).addTo(map).bindTooltip(`Loading Point (Origin): ${selected.origin.name}`, { direction: 'top' });
+
+        // 2. Draw Unloading Point (Destination)
+        window.L.marker([selected.destination.lat, selected.destination.lng], {
+          icon: window.L.divIcon({
+            html: `<div class="h-6 w-6 bg-rose-600 rounded-full border-2 border-white flex items-center justify-center text-[9px] font-bold text-white shadow-md">E</div>`,
+            className: 'custom-div-icon',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          })
+        }).addTo(map).bindTooltip(`Unloading Point (Destination): ${selected.destination.name}`, { direction: 'top' });
+
+        // 3. Draw Driver's Current GPS Position
+        const html = `
+          <div class="relative flex items-center justify-center">
+            <div class="absolute h-8 w-8 rounded-full animate-ping animate-duration-1000" style="background-color: ${statusColor}40"></div>
+            <div class="h-6 w-6 text-white rounded-full flex items-center justify-center shadow-md border-2 border-slate-950 transition-all duration-300" style="background-color: ${statusColor}; font-size: 10px;">
+              🚚
+            </div>
+          </div>
+        `;
+        window.L.marker([selected.currentCoords.lat, selected.currentCoords.lng], {
+          icon: window.L.divIcon({
+            html,
+            className: 'custom-div-icon',
+            iconSize: [24, 24],
+            iconAnchor: [12, 12]
+          })
+        }).addTo(map).bindTooltip(`Vehicle: ${selected.vehicleNumber}`, { direction: 'top' });
+
+        // 4. Draw Route Path Polyline
+        const coords = selected.routeCoords.map(c => [c.lat, c.lng]);
+        window.L.polyline(coords, {
+          color: statusColor,
+          weight: 4,
+          opacity: 0.85,
+          dashArray: selected.status === 'Delayed' ? '5, 10' : 'none'
+        }).addTo(map);
+
+        // 5. Draw Hub Geofence Circles
+        selected.geofences.forEach(fence => {
+          window.L.circle([fence.lat, fence.lng], {
+            radius: fence.radius,
+            color: '#10b981',
+            fillColor: '#10b981',
+            fillOpacity: 0.04,
+            weight: 1,
+            dashArray: '3, 5'
+          }).addTo(map);
+        });
+
+        // 6. Fit Map View bounds to span loading GPS and unloading GPS
+        const bounds = window.L.latLngBounds([
+          [selected.origin.lat, selected.origin.lng],
+          [selected.destination.lat, selected.destination.lng]
+        ]);
+        bounds.extend([selected.currentCoords.lat, selected.currentCoords.lng]);
+        map.fitBounds(bounds, { padding: [40, 40] });
+
+      }, 300); // 300ms transition delay to ensure drawer DOM is fully rendered
+
+      return () => clearTimeout(timer);
+    } else {
+      if (modalMapRef.current) {
+        modalMapRef.current.remove();
+        modalMapRef.current = null;
+      }
+    }
+  }, [selectedTripId, leafletLoaded, trips]);
+
   // Filtering trips
   const filteredTrips = useMemo(() => {
     return trips.filter(t => {
-      // Exclude Completed or Completed-equivalent (Stopped) trips from active live tracking
-      const isAssignedOrDispatched = 
-        t.status === 'PENDING' || 
-        t.status === 'Moving' || 
-        t.status === 'Idle' || 
-        t.status === 'Delayed' || 
-        t.status === 'Offline';
-        
-      if (!isAssignedOrDispatched) return false;
-
       const matchesSearch = 
         t.vehicleNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         t.driverName.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -562,7 +671,7 @@ export default function LiveFleetTrackingPage() {
       </div>
 
       {/* Top GPS Analytics Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-0 shadow-xs p-4 bg-slate-900 text-white relative overflow-hidden">
           <div className="absolute right-2 bottom-2 text-slate-800 opacity-20"><Truck size={60} /></div>
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active Fleet</p>
@@ -578,147 +687,11 @@ export default function LiveFleetTrackingPage() {
         </Card>
 
         <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-amber-100 opacity-30"><AlertTriangle size={60} /></div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Idle Vehicles</p>
-          <h3 className="text-2xl font-extrabold font-mono text-amber-600 mt-1">{stats.idle}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">engines turned off</span>
-        </Card>
-
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
           <div className="absolute right-2 bottom-2 text-emerald-100 opacity-30"><CheckCircle2 size={60} /></div>
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Completed</p>
           <h3 className="text-2xl font-extrabold font-mono text-emerald-600 mt-1">{stats.completed}</h3>
           <span className="text-[9px] text-slate-500 font-medium">deliveries verified</span>
         </Card>
-
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-slate-200 opacity-30"><Volume2 size={60} /></div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Offline Trackers</p>
-          <h3 className="text-2xl font-extrabold font-mono text-slate-500 mt-1">{stats.offline}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">telemetry lost</span>
-        </Card>
-
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-red-100 opacity-30"><ShieldAlert size={60} /></div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Corridor Deviations</p>
-          <h3 className="text-2xl font-extrabold font-mono text-red-600 mt-1">{stats.deviations}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">off-route corridors</span>
-        </Card>
-      </div>
-
-      {/* Main Map + Alert Panel Split Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
-        
-        {/* LEFT COLUMN: Real-time GPS Alerts Panel */}
-        <div className="xl:col-span-1 space-y-6 flex flex-col h-[550px] overflow-hidden">
-          <Card className="border-0 shadow-sm bg-white flex flex-col h-full overflow-hidden">
-            <CardHeader className="bg-slate-900 text-white p-5">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                <Bell size={14} className="text-amber-400 animate-pulse" /> Live Telemetry Alerts
-              </CardTitle>
-              <CardDescription className="text-[10px] text-slate-400 mt-0.5">Route deviations and engine stoppages.</CardDescription>
-            </CardHeader>
-            
-            <CardContent className="p-4 flex-1 overflow-y-auto space-y-3 custom-scrollbar">
-              <AnimatePresence>
-                {alerts.length === 0 ? (
-                  <div className="text-center py-12 text-slate-400 italic text-xs">No active telemetry alerts.</div>
-                ) : (
-                  alerts.map((alert) => (
-                    <motion.div
-                      key={alert.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
-                      className={`p-3 rounded-xl border flex flex-col gap-2 ${
-                        alert.severity === 'critical' 
-                          ? 'bg-red-50/40 border-red-100 text-red-800' 
-                          : 'bg-amber-50/40 border-amber-100 text-amber-800'
-                      }`}
-                    >
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <span className="text-[8px] font-bold tracking-widest uppercase font-mono block opacity-60">ALERT: {alert.type}</span>
-                          <span className="text-xs font-bold font-mono block mt-0.5">{alert.vehicleNumber}</span>
-                        </div>
-                        <Button 
-                          size="icon" 
-                          variant="ghost" 
-                          className="h-5 w-5 rounded-full hover:bg-slate-100"
-                          onClick={() => dismissAlert(alert.id)}
-                        >
-                          <X size={10} />
-                        </Button>
-                      </div>
-                      <p className="text-[11px] leading-snug font-medium text-slate-600">{alert.message}</p>
-                      <div className="flex justify-between items-center text-[9px] text-slate-400 mt-1 border-t pt-1.5">
-                        <span>Driver: {alert.driverName}</span>
-                        <span>{alert.time}</span>
-                      </div>
-                    </motion.div>
-                  ))
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* RIGHT COLUMN: Full-screen interactive map panel */}
-        <div className="xl:col-span-3 space-y-6">
-          <Card className="border-0 shadow-sm bg-white overflow-hidden flex flex-col h-[550px]">
-            
-            {/* Map control widgets header */}
-            <CardHeader className="border-b border-slate-100 p-4 bg-slate-50/50 flex flex-row items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-1.5">
-                <Map size={14} className="text-slate-500" />
-                <span className="text-xs font-bold text-slate-700 uppercase">Live GPS Control Tower Map</span>
-              </div>
-              
-              {/* Sat/Light/Dark selector */}
-              <div className="flex items-center gap-1 bg-white border p-1 rounded-xl shadow-2xs">
-                <Button 
-                  size="sm" 
-                  variant={mapViewMode === 'dark' ? 'default' : 'ghost'} 
-                  className="h-7 text-[10px] uppercase font-bold"
-                  onClick={() => setMapViewMode('dark')}
-                >
-                  <Moon size={11} className="mr-1" /> Dark
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant={mapViewMode === 'satellite' ? 'default' : 'ghost'} 
-                  className="h-7 text-[10px] uppercase font-bold"
-                  onClick={() => setMapViewMode('satellite')}
-                >
-                  <Layers size={11} className="mr-1" /> Satellite
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant={mapViewMode === 'light' ? 'default' : 'ghost'} 
-                  className="h-7 text-[10px] uppercase font-bold"
-                  onClick={() => setMapViewMode('light')}
-                >
-                  <Sun size={11} className="mr-1" /> Vector
-                </Button>
-              </div>
-            </CardHeader>
-
-            {/* Map container */}
-            <div className="flex-1 w-full bg-slate-950 relative overflow-hidden">
-              {!leafletLoaded && (
-                <div className="absolute inset-0 flex items-center justify-center text-white bg-slate-950/80 z-40">
-                  <div className="text-center space-y-3">
-                    <Activity className="h-8 w-8 text-primary animate-pulse mx-auto" />
-                    <p className="text-sm font-medium">Mounting GPS Control Map layers...</p>
-                  </div>
-                </div>
-              )}
-              <div ref={mapContainerRef} className="w-full h-full z-10" />
-            </div>
-
-          </Card>
-        </div>
-
       </div>
 
       {/* Active Trips Tabular Grid */}
@@ -765,12 +738,11 @@ export default function LiveFleetTrackingPage() {
               <TableHeader className="bg-slate-50/50">
                 <TableRow>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px] pl-6 py-3">Bid ID</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Route & Stops</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Vehicle Number</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Driver Name</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Transporter</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Current Coordinates</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] text-center">Live Speed</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">ETA</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Last Updated</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Trip Status</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px] text-right pr-6">Dispatcher Actions</TableHead>
@@ -779,7 +751,7 @@ export default function LiveFleetTrackingPage() {
               <TableBody>
                 {filteredTrips.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-slate-400 italic text-xs">
+                    <TableCell colSpan={9} className="text-center py-8 text-slate-400 italic text-xs">
                       No active tracked trips matching criteria.
                     </TableCell>
                   </TableRow>
@@ -791,18 +763,25 @@ export default function LiveFleetTrackingPage() {
                       className="hover:bg-slate-50/50 cursor-pointer transition-all border-b last:border-0"
                     >
                       <TableCell className="pl-6 py-3.5 font-bold font-mono text-slate-800 text-xs">{tr.bidId}</TableCell>
+                      <TableCell className="py-3.5">
+                        <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-slate-700 bg-slate-50/50 border border-slate-100 rounded-lg px-2.5 py-1 w-fit max-w-[340px]">
+                          <span className="text-blue-600 font-semibold">{tr.fromLoc || tr.origin.name}</span>
+                          {(tr.loadStops || []).map((stop: string, idx: number) => (
+                            <React.Fragment key={idx}>
+                              <span className="text-slate-400 font-normal">→</span>
+                              <span className="text-amber-600 font-semibold">{stop}</span>
+                            </React.Fragment>
+                          ))}
+                          <span className="text-slate-400 font-normal">→</span>
+                          <span className="text-emerald-600 font-semibold">{tr.toLoc || tr.destination.name}</span>
+                        </div>
+                      </TableCell>
                       <TableCell className="text-xs font-bold font-mono text-slate-700">{tr.vehicleNumber}</TableCell>
                       <TableCell className="text-xs font-semibold text-slate-700">{tr.driverName}</TableCell>
                       <TableCell className="text-xs text-slate-500">{tr.transporter}</TableCell>
                       <TableCell className="text-xs font-mono text-slate-500 text-[10px]">
                         {tr.currentCoords.lat.toFixed(4)}N, {tr.currentCoords.lng.toFixed(4)}E
                       </TableCell>
-                      <TableCell className="text-center">
-                        <span className={`font-bold font-mono text-xs ${tr.speed > 0 ? 'text-emerald-600' : 'text-slate-400'}`}>
-                          {tr.speed} km/h
-                        </span>
-                      </TableCell>
-                      <TableCell className="text-xs font-bold text-slate-700">{tr.eta}</TableCell>
                       <TableCell className="text-xs text-slate-400 font-medium">{tr.lastUpdated}</TableCell>
                       <TableCell>{getStatusBadge(tr.status)}</TableCell>
                       <TableCell className="text-right pr-6" onClick={e => e.stopPropagation()}>
@@ -811,7 +790,7 @@ export default function LiveFleetTrackingPage() {
                           size="sm" 
                           className="bg-slate-900 hover:bg-slate-800 text-white h-7 text-[10px] font-bold uppercase rounded"
                         >
-                          Telemetry Center
+                          View Tracking
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -868,53 +847,16 @@ export default function LiveFleetTrackingPage() {
 
               {/* Content body */}
               <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
-                
-                {/* Active telemetry readings */}
-                <div className="grid grid-cols-3 gap-3 bg-slate-50 border rounded-xl p-3 text-center">
-                  <div className="space-y-1">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Live Speed</span>
-                    <span className="text-sm font-extrabold font-mono text-slate-800">{selectedTrip.speed} km/h</span>
-                  </div>
-                  <div className="space-y-1 border-l">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Est. Arrival</span>
-                    <span className="text-sm font-extrabold font-mono text-slate-800">{selectedTrip.eta}</span>
-                  </div>
-                  <div className="space-y-1 border-l">
-                    <span className="text-[9px] text-slate-400 font-bold uppercase tracking-wider block">Fuel Reserve</span>
-                    <span className="text-sm font-extrabold font-mono text-emerald-600 flex items-center justify-center gap-1">
-                      <Fuel size={12} /> {selectedTrip.fuel}%
-                    </span>
-                  </div>
-                </div>
 
-                {/* Driver profile */}
+                {/* Dispatch coordinates, Bid ID, and Bid Details */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Driver Logistics Details</h4>
-                  <div className="border border-slate-100 rounded-xl p-4 flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-700 font-bold border">
-                        {selectedTrip.driverName.charAt(0)}
-                      </div>
-                      <div>
-                        <p className="text-xs font-bold text-slate-800">{selectedTrip.driverName}</p>
-                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">{selectedTrip.driverPhone}</p>
-                      </div>
-                    </div>
-
-                    <div className="flex gap-1.5">
-                      <a href={`tel:${selectedTrip.driverPhone}`}>
-                        <Button size="icon" variant="outline" className="h-8 w-8 text-emerald-600 border-emerald-100 bg-emerald-50 hover:bg-emerald-100">
-                          <PhoneCall size={13} />
-                        </Button>
-                      </a>
-                    </div>
+                  <div className="flex justify-between items-center">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Planned Transit Corridor</h4>
+                    <Badge variant="outline" className="text-[10px] font-mono font-bold bg-slate-50 border-slate-200 text-slate-700">
+                      BID ID: {selectedTrip.bidId}
+                    </Badge>
                   </div>
-                </div>
-
-                {/* Dispatch coordinates */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Planned Transit Corridor</h4>
-                  <div className="bg-slate-50 border rounded-xl p-4 text-xs space-y-4">
+                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs space-y-4">
                     
                     {/* Origin destination nodes */}
                     <div className="flex justify-between items-start gap-4">
@@ -941,63 +883,71 @@ export default function LiveFleetTrackingPage() {
                         </div>
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* Stoppage details */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Engine & Stop Audits</h4>
-                  <div className="border border-slate-100 rounded-xl p-4 text-xs space-y-3">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Stoppages Recorded:</span>
-                      <span className="font-bold text-slate-800">{selectedTrip.stops.length} times</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500">Current Idle Duration:</span>
-                      <span className="font-bold text-slate-800">{selectedTrip.idleTime}</span>
-                    </div>
-                    
-                    {/* Render active stops */}
-                    <div className="space-y-2 pt-2 border-t">
-                      {selectedTrip.stops.map((stop, idx) => (
-                        <div key={idx} className="flex justify-between items-center p-2.5 bg-slate-50 border border-slate-100 rounded-lg">
-                          <div className="flex items-center gap-2">
-                            <MapPin size={11} className={stop.idle ? "text-amber-500" : "text-slate-400"} />
-                            <span className="font-medium text-slate-700">{stop.name}</span>
-                          </div>
-                          <Badge variant="outline" className="text-[9px] font-mono font-bold">
-                            {stop.duration}
-                          </Badge>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Dynamic activity timeline */}
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Live Transit Logs</h4>
-                  <div className="relative pl-4 border-l border-slate-200 ml-2 space-y-4">
-                    {selectedTrip.timeline.map((event, index) => (
-                      <div key={index} className="relative text-xs">
-                        {/* Dot indicator */}
-                        <div className={`absolute -left-[21px] top-1 h-2.5 w-2.5 rounded-full border-2 border-white ${
-                          event.status === 'success' ? 'bg-emerald-500' :
-                          event.status === 'warning' ? 'bg-amber-500' :
-                          event.status === 'danger' ? 'bg-red-500' : 'bg-blue-500'
-                        }`} />
-                        <span className="text-[10px] text-slate-400 font-mono block">{event.time}</span>
-                        <p className="font-medium text-slate-700 mt-0.5 leading-snug">{event.event}</p>
+                    {/* Clean dashed line separator & Bid details */}
+                    <div className="border-t border-dashed border-slate-200 pt-3.5 mt-3.5 flex justify-between items-center text-xs">
+                      <div>
+                        <span className="text-[9px] text-slate-400 uppercase font-bold block">Bidding Rate</span>
+                        <span className="font-extrabold font-mono text-emerald-600 block mt-0.5">
+                          ₹{(selectedTrip.pricePerTonne || 1200).toLocaleString('en-IN')} <span className="text-[9px] font-normal text-slate-400">/ Tonne</span>
+                        </span>
                       </div>
-                    ))}
+                      <div className="text-center">
+                        <span className="text-[9px] text-slate-400 uppercase font-bold block">Total Tonnes</span>
+                        <span className="font-bold font-mono text-slate-700 block mt-0.5">
+                          {selectedTrip.tonnes || 20} <span className="text-[9px] font-normal text-slate-400">Tons</span>
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[9px] text-slate-400 uppercase font-bold block">Total Amount</span>
+                        <span className="font-extrabold font-mono text-slate-900 block mt-0.5">
+                          ₹{(selectedTrip.bidAmount || ((selectedTrip.pricePerTonne || 1200) * (selectedTrip.tonnes || 20))).toLocaleString('en-IN')}
+                        </span>
+                      </div>
+                    </div>
                   </div>
                 </div>
 
-                {/* Administrative control actions */}
-                <div className="space-y-3 pt-4 border-t">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Administrative Tower Controls</h4>
-                  
-                  {selectedTrip.status === 'PENDING' ? (
+                {/* INDIVIDUAL TRACKING MAP FROM LOADING GPS TO UNLOADING GPS */}
+                <div className="w-full h-[260px] rounded-xl overflow-hidden border border-slate-200 relative bg-slate-50 shadow-inner">
+                  {!leafletLoaded && (
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-50 z-40">
+                      <div className="text-center space-y-2">
+                        <Activity className="h-6 w-6 text-primary animate-pulse mx-auto" />
+                        <p className="text-xs">Mounting individual map...</p>
+                      </div>
+                    </div>
+                  )}
+                  <div ref={modalMapContainerRef} className="w-full h-full z-10" />
+                </div>
+
+                {/* Driver profile */}
+                <div className="space-y-3">
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Driver Logistics Details</h4>
+                  <div className="border border-slate-100 rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-700 font-bold border">
+                        {selectedTrip.driverName.charAt(0)}
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-slate-800">{selectedTrip.driverName}</p>
+                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">{selectedTrip.driverPhone}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex gap-1.5">
+                      <a href={`tel:${selectedTrip.driverPhone}`}>
+                        <Button size="icon" variant="outline" className="h-8 w-8 text-emerald-600 border-emerald-100 bg-emerald-50 hover:bg-emerald-100">
+                          <PhoneCall size={13} />
+                        </Button>
+                      </a>
+                    </div>
+                  </div>
+                </div>
+
+                {selectedTrip.status === 'PENDING' && (
+                  <div className="space-y-3 pt-4 border-t">
+                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Administrative Tower Controls</h4>
                     <form onSubmit={handleDispatchSubmit} className="space-y-3 border rounded-xl p-4 bg-slate-50/50">
                       <p className="text-[10px] font-bold text-slate-500 uppercase">Assign Location & Dispatch Details</p>
                       
@@ -1077,38 +1027,8 @@ export default function LiveFleetTrackingPage() {
                         {isDispatching ? "Dispatching..." : "Dispatch Trip & Coordinates"}
                       </Button>
                     </form>
-                  ) : isReassigning ? (
-                    <form onSubmit={handleReassignSubmit} className="space-y-3 border rounded-xl p-3 bg-slate-50/50">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase">Input Reassigned Vehicle Registration Number</p>
-                      <div className="flex gap-2">
-                        <Input 
-                          value={reassignInput}
-                          onChange={e => setReassignInput(e.target.value)}
-                          placeholder="e.g. MH-12-KL-3402"
-                          className="bg-white h-8 text-xs font-mono"
-                        />
-                        <Button type="submit" size="sm" className="bg-primary text-white">Save</Button>
-                        <Button size="sm" variant="outline" onClick={() => setIsReassigning(false)}>Cancel</Button>
-                      </div>
-                    </form>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      <Button 
-                        onClick={() => triggerEmergency(selectedTrip.id)}
-                        className="bg-red-600 hover:bg-red-700 text-white font-bold h-9 uppercase text-[10px] tracking-wider shadow-xs"
-                      >
-                        <ShieldAlert size={12} className="mr-1.5" /> Trigger SOS Alarm
-                      </Button>
-                      <Button 
-                        variant="outline"
-                        onClick={() => setIsReassigning(true)}
-                        className="border-slate-200 font-bold h-9 uppercase text-[10px] tracking-wider text-slate-700 hover:bg-slate-50"
-                      >
-                        <Settings size={12} className="mr-1.5" /> Reassign Vehicle
-                      </Button>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
 
               </div>
             </motion.div>

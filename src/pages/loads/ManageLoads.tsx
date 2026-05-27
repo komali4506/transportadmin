@@ -630,9 +630,13 @@ export default function ManageLoads() {
     const open = loads.filter(l => l.status === 'Open').length;
     const assigned = loads.filter(l => l.status === 'Assigned & Dispatched' || l.status === 'CLOSED').length;
     const completed = loads.filter(l => l.status === 'Completed').length;
-    const revenue = loads
-      .filter(l => l.status === 'Completed' || l.status === 'Assigned & Dispatched' || l.status === 'CLOSED')
-      .reduce((sum, l) => sum + (l.totalFreight || 0), 0);
+    const revenue = loads.reduce((sum, l) => {
+      if (l.status === 'Completed' || l.status === 'Assigned & Dispatched' || l.status === 'CLOSED') {
+        const approvedBid = l.bids?.find(b => b.status === 'ACCEPTED' || b.status === 'Approved' || b.status === 'Selected');
+        return sum + (approvedBid ? approvedBid.bidAmount : (l.totalFreight || 0));
+      }
+      return sum;
+    }, 0);
     const activeVehicles = assigned;
     
     return { total, open, assigned, completed, revenue, activeVehicles };
@@ -1161,6 +1165,14 @@ export default function ManageLoads() {
                         <span className="text-slate-400">Dispatch Target:</span>
                         <span className="font-bold text-slate-800">{selectedLoad.dispatchDate}</span>
                       </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-400">Load End Date:</span>
+                        <span className="font-bold text-slate-800">{selectedLoad.endDate || 'N/A'}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-xs">
+                        <span className="text-slate-400">Load End Time:</span>
+                        <span className="font-bold text-slate-800">{selectedLoad.endTime || 'N/A'}</span>
+                      </div>
                       <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between items-center">
                         <span className="text-xs font-bold text-slate-500">Target Total Freight:</span>
                         <span className="text-sm font-bold text-green-700 font-mono">₹{selectedLoad.totalFreight.toLocaleString('en-IN')}</span>
@@ -1404,7 +1416,9 @@ export default function ManageLoads() {
                             {filteredBids.length === 0 && (
                               <TableRow>
                                 <TableCell colSpan={8} className="h-32 text-center text-slate-400 italic">
-                                  No bids match your search query or filters.
+                                  {bidSearch.trim() !== '' 
+                                    ? "No bids match your search query or filters." 
+                                    : "No active bids or quotes received yet for this load."}
                                 </TableCell>
                               </TableRow>
                             )}

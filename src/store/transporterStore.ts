@@ -42,6 +42,7 @@ export interface TransporterProfile {
   ifsc: string;
   upiId: string;
   status: 'Pending' | 'Approved' | 'Under Review' | 'Rejected' | 'Blacklisted';
+  trucks?: any[];
   documents: {
     aadhaar: TransporterDoc;
     panCard: TransporterDoc;

@@ -20,8 +20,7 @@ import { exportToPDF } from '@/utils/exportPdf';
 
 export default function Payments() {
   const { toast } = useToast();
-  const { loads } = useLoadStore();
-  const { payments, addPayment, releasePayment, updatePaymentStatus, syncPaymentsFromLoads } = usePaymentStore();
+  const { payments, isLoading, fetchInvoicesFromBackend, settlePaymentOnBackend } = usePaymentStore();
   const { addNotification } = useTransporterStore();
 
   // Search & Filter state
@@ -32,37 +31,21 @@ export default function Payments() {
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [viewingInvoice, setViewingInvoice] = useState<PaymentEntry | null>(null);
-  const [releasingPayment, setReleasingPayment] = useState<PaymentEntry | null>(null);
 
-  // New Payout Form state
+  // Fallback Form state
   const [selectedLoadId, setSelectedLoadId] = useState('');
   const [extraCharges, setExtraCharges] = useState('0');
   const [paymentMethod, setPaymentMethod] = useState<'Bank Transfer' | 'UPI' | 'RTGS' | 'NEFT'>('Bank Transfer');
 
-  // Auto-sync completed loads on page mount to ensure all final transactions appear instantly!
+  // Query actual submitted invoices on mount
   useEffect(() => {
-    syncPaymentsFromLoads();
-  }, [loads]);
+    fetchInvoicesFromBackend();
+  }, []);
 
-  // Dynamic calculation of loads eligible for manual payout creation
-  const eligibleLoads = useMemo(() => {
-    return loads.filter(l => l.status === 'Completed' || l.status === 'Assigned & Dispatched');
-  }, [loads]);
-
-  const selectedLoadDetail = useMemo(() => {
-    return eligibleLoads.find(l => l.id === selectedLoadId);
-  }, [selectedLoadId, eligibleLoads]);
-
-  // Form field calculations
+  // Form field calculations (fallback only)
   const calculatedPayable = useMemo(() => {
-    if (!selectedLoadDetail) return { base: 0, penalty: 0, tax: 0, final: 0 };
-    const base = selectedLoadDetail.totalFreight || 0;
-    const penalty = 0; // Shortage Delay Penalty removed
-    const tax = Math.round(base * 0.05); // 5% GST
-    const extra = parseFloat(extraCharges) || 0;
-    const final = base + tax + extra - penalty;
-    return { base, penalty, tax, final };
-  }, [selectedLoadDetail, extraCharges]);
+    return { base: 0, penalty: 0, tax: 0, final: 0 };
+  }, []);
 
   // Dynamic KPI Cards Computations
   const stats = useMemo(() => {
@@ -98,52 +81,23 @@ export default function Payments() {
 
   const handleCreatePayoutSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedLoadId) {
-      toast({ title: "Form Error", description: "Please select an active completed load.", variant: "destructive" });
-      return;
-    }
-
-    const loadObj = eligibleLoads.find(l => l.id === selectedLoadId)!;
-    addPayment({
-      loadId: loadObj.id,
-      transporter: loadObj.assignedTransporter?.companyName || 'Delhi Roadlines',
-      amount: calculatedPayable.base,
-      penalty: calculatedPayable.penalty,
-      tax: calculatedPayable.tax,
-      extraCharges: parseFloat(extraCharges) || 0,
-      finalAmount: calculatedPayable.final,
-      status: 'Pending',
-      paymentMethod
-    });
-
-    toast({
-      title: "Payout Provisioned!",
-      description: `New invoice INV generated for ${loadObj.id}.`,
-      className: "bg-green-600 text-white font-semibold border-none"
-    });
-
-    setIsPayoutModalOpen(false);
-    setSelectedLoadId('');
-    setExtraCharges('0');
   };
 
-  const handleReleaseConfirm = () => {
-    if (!releasingPayment) return;
-    releasePayment(releasingPayment.paymentId);
-    
-    // Dispatch instant transporter alert
-    addNotification(
-      releasingPayment.loadId,
-      'Assignment',
-      `Payment released! Payout of ₹${releasingPayment.finalAmount.toLocaleString('en-IN')} has been settled via ${releasingPayment.paymentMethod}.`
-    );
-
-    toast({
-      title: "Settlement Confirmed",
-      description: `Funds released for transaction ID ${releasingPayment.paymentId}.`,
-      className: "bg-green-600 text-white border-none font-semibold shadow-md"
-    });
-    setReleasingPayment(null);
+  const handleMarkAsPaid = async (tx: PaymentEntry) => {
+    try {
+      await settlePaymentOnBackend(tx.paymentId, 'Bank Transfer', 0);
+      toast({
+        title: "Invoice Settled Successfully",
+        description: `Successfully marked Load ID: ${tx.loadId} as Paid.`,
+        className: "bg-green-600 text-white font-bold border-none shadow-md"
+      });
+    } catch (err: any) {
+      toast({
+        title: "Settlement Failed",
+        description: err.message || "Failed to settle payment on the backend.",
+        variant: "destructive"
+      });
+    }
   };
 
   const triggerMockDownload = async (type: string, id: string, elementId?: string) => {
@@ -193,22 +147,16 @@ export default function Payments() {
       {/* Header Panel */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Payments & Settlements</h1>
-          <p className="text-sm text-gray-500 mt-1">Manage transporter billing pipelines, taxes, and instant NEFT/RTGS audits.</p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Transporter Invoices</h1>
+          <p className="text-sm text-gray-500 mt-1">View and download invoices submitted by transporters and drivers.</p>
         </div>
         <div className="flex items-center gap-2.5">
-          {/* Payment Analytics button removed */}
-          <Button 
-            onClick={() => setIsPayoutModalOpen(true)}
-            className="bg-primary hover:bg-primary-hover text-white gap-2 shadow-md transition-all active:scale-95 font-semibold"
-          >
-            <Plus size={15} /> New Payout
-          </Button>
+          {/* Invoices are created strictly by the transporters/drivers on their mobile app */}
         </div>
       </div>
 
       {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Total Outstanding */}
         <Card className="border-0 shadow-xs bg-slate-900 text-white overflow-hidden relative">
@@ -237,7 +185,7 @@ export default function Payments() {
           <CardContent className="p-6 space-y-4">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Paid / Released (Month)</p>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Paid (Month)</p>
                 <h3 className="text-3xl font-extrabold font-mono text-slate-900">₹{stats.paidThisMonth.toLocaleString('en-IN')}</h3>
               </div>
               <div className="p-2.5 bg-green-50 text-green-600 rounded-xl">
@@ -252,25 +200,6 @@ export default function Payments() {
             </div>
           </CardContent>
         </Card>
-
-        {/* Under Review */}
-        <Card className="border-0 shadow-xs bg-white overflow-hidden relative">
-          <CardContent className="p-6 space-y-4">
-            <div className="flex justify-between items-start">
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Under Settlement Review</p>
-                <h3 className="text-3xl font-extrabold font-mono text-slate-900">₹{stats.inReview.toLocaleString('en-IN')}</h3>
-              </div>
-              <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-                <Clock size={20} />
-              </div>
-            </div>
-            <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-              <span className="text-slate-400 font-medium">Active GST Audit:</span>
-              <span className="font-bold text-amber-600">5% Processing</span>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Transactions Table Container */}
@@ -278,8 +207,8 @@ export default function Payments() {
         <CardHeader className="pb-3 border-b border-slate-100">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-base font-bold text-slate-800">Settlement Ledger</CardTitle>
-              <CardDescription className="text-xs text-slate-400">Ledger automatically syncs final freight values from completed loads.</CardDescription>
+              <CardTitle className="text-base font-bold text-slate-800">Invoices Ledger</CardTitle>
+              <CardDescription className="text-xs text-slate-400">View and download carrier-submitted invoices synced from completed trips.</CardDescription>
             </div>
             
             <div className="flex items-center gap-2">
@@ -314,10 +243,9 @@ export default function Payments() {
               <TableHeader className="bg-slate-50">
                 <TableRow>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px] py-3.5 pl-6">Load ID</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Settlement Date</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Transporter</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Total Value</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Final Settled</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Date Submitted</TableHead>
+                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Invoice Amount</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Status</TableHead>
                   <TableHead className="font-bold text-slate-500 uppercase text-[10px] text-right pr-6">Actions</TableHead>
                 </TableRow>
@@ -325,7 +253,7 @@ export default function Payments() {
               <TableBody>
                 {filteredPayments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={7} className="text-center py-10 text-slate-400 italic text-xs">
+                    <TableCell colSpan={6} className="text-center py-10 text-slate-400 italic text-xs">
                       No matching records found in ledger.
                     </TableCell>
                   </TableRow>
@@ -333,37 +261,40 @@ export default function Payments() {
                   filteredPayments.map((tx) => (
                     <TableRow key={tx.paymentId} className="hover:bg-slate-50/40">
                       <TableCell className="text-xs font-mono font-bold text-primary pl-6">{tx.loadId}</TableCell>
+                      <TableCell className="text-xs font-semibold text-slate-700">{tx.transporter}</TableCell>
                       <TableCell className="text-xs text-slate-500">{tx.createdAt}</TableCell>
-                      <TableCell className="font-semibold text-xs text-slate-800">{tx.transporter}</TableCell>
-                      <TableCell className="font-bold text-xs font-mono text-slate-600">₹{tx.amount.toLocaleString()}</TableCell>
-                      <TableCell className="font-bold text-xs font-mono text-slate-900">₹{tx.finalAmount.toLocaleString()}</TableCell>
+                      <TableCell className="font-bold text-xs font-mono text-slate-900">₹{tx.amount.toLocaleString()}</TableCell>
                       <TableCell>{getStatusBadge(tx.status)}</TableCell>
                       <TableCell className="text-right pr-6" onClick={e => e.stopPropagation()}>
-                        <div className="flex justify-end gap-1 select-none">
+                        <div className="flex justify-end gap-1.5 select-none">
                           <Button 
                             onClick={() => setViewingInvoice(tx)}
                             size="sm"
                             className="bg-slate-100 hover:bg-slate-200 text-slate-700 h-7 text-[10px] px-2.5 font-bold uppercase rounded"
                           >
-                            Invoice
+                            View Invoice
                           </Button>
                           {tx.status !== 'Released' && tx.status !== 'Completed' && (
                             <Button 
-                              onClick={() => setReleasingPayment(tx)}
+                              onClick={() => handleMarkAsPaid(tx)}
                               size="sm"
                               className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-[10px] px-2.5 font-bold uppercase rounded shadow-xs"
                             >
-                              Release
+                              Paid
                             </Button>
                           )}
-                          <Button 
-                            onClick={() => triggerMockDownload('Receipt', tx.paymentId)}
-                            variant="ghost"
-                            size="icon" 
-                            className="h-7 w-7 text-slate-400 hover:text-slate-800 hover:bg-slate-100"
-                          >
-                            <Download size={14} />
-                          </Button>
+                          {tx.invoiceUrl && (
+                            <a 
+                              href={tx.invoiceUrl}
+                              download={`invoice-${tx.invoiceId}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center justify-center h-7 w-7 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
+                              title="Download Invoice"
+                            >
+                              <Download size={14} />
+                            </a>
+                          )}
                         </div>
                       </TableCell>
                     </TableRow>
@@ -375,96 +306,7 @@ export default function Payments() {
         </CardContent>
       </Card>
 
-      {/* MODAL 1: Create Payout Form Dialog */}
-      <Dialog open={isPayoutModalOpen} onOpenChange={setIsPayoutModalOpen}>
-        <DialogContent className="sm:max-w-[480px] border-0 rounded-2xl shadow-xl bg-white p-0 overflow-hidden">
-          <DialogHeader className="p-6 bg-slate-900 text-white">
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Coins size={18} className="text-emerald-400" /> New Settlement Payout
-            </DialogTitle>
-            <DialogDescription className="text-xs text-slate-400 mt-1">
-              Select completed transporter dispatches to automatically calculate billing rates and taxes.
-            </DialogDescription>
-          </DialogHeader>
 
-          <form onSubmit={handleCreatePayoutSubmit} className="p-6 space-y-4">
-            <div className="space-y-1.5">
-              <label className="text-xs font-bold text-slate-500 uppercase">Select Active Load ID</label>
-              <select
-                value={selectedLoadId}
-                onChange={e => setSelectedLoadId(e.target.value)}
-                className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-primary"
-              >
-                <option value="">-- Choose Completed/Dispatched Load --</option>
-                {eligibleLoads.map(l => (
-                  <option key={l.id} value={l.id}>
-                    {l.id} - {l.product} ({l.from} → {l.to})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {selectedLoadDetail && (
-              <div className="bg-slate-50 border rounded-xl p-4.5 space-y-3.5 text-xs text-slate-700">
-                <div className="flex justify-between border-b pb-2">
-                  <span className="text-slate-400 font-medium">Assigned Transporter:</span>
-                  <span className="font-bold text-slate-900">{selectedLoadDetail.assignedTransporter?.companyName || 'Delhi Roadlines'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-400">Approved Base Freight:</span>
-                  <span className="font-mono font-semibold">₹{calculatedPayable.base.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>GST Tax (5%):</span>
-                  <span className="font-mono">₹{calculatedPayable.tax.toLocaleString()}</span>
-                </div>
-              </div>
-            )}
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase">Extra Charges (INR)</label>
-                <Input 
-                  type="number"
-                  value={extraCharges}
-                  onChange={e => setExtraCharges(e.target.value)}
-                  placeholder="Enter extra loading costs..."
-                  className="border-slate-200 font-mono text-sm h-10"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold text-slate-500 uppercase">Settlement Method</label>
-                <select
-                  value={paymentMethod}
-                  onChange={e => setPaymentMethod(e.target.value as any)}
-                  className="flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="Bank Transfer">Bank Transfer</option>
-                  <option value="UPI">UPI</option>
-                  <option value="RTGS">RTGS</option>
-                  <option value="NEFT">NEFT</option>
-                </select>
-              </div>
-            </div>
-
-            {selectedLoadDetail && (
-              <div className="pt-2 border-t flex justify-between items-center bg-slate-900/5 p-3 rounded-lg">
-                <span className="text-xs font-bold text-slate-800">Final Payable Amount:</span>
-                <span className="text-lg font-extrabold font-mono text-primary">₹{calculatedPayable.final.toLocaleString('en-IN')}</span>
-              </div>
-            )}
-
-            <DialogFooter className="pt-4 border-t flex gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsPayoutModalOpen(false)} className="border-slate-200 h-10">
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-primary hover:bg-primary-hover text-white h-10 font-bold px-4 uppercase text-xs tracking-wider shadow-sm">
-                Provision Payout Invoice
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
 
       {/* MODAL 2: View Dynamic Invoice Modal */}
       <Dialog open={!!viewingInvoice} onOpenChange={(val) => !val && setViewingInvoice(null)}>
@@ -509,39 +351,87 @@ export default function Payments() {
 
                 {/* Billing details */}
                 <div className="space-y-2">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Billing Breakdown</span>
-                  <div className="border border-slate-100 rounded-xl overflow-hidden text-xs">
-                    <div className="grid grid-cols-3 bg-slate-50 p-2.5 font-bold border-b text-slate-500 uppercase tracking-wider text-[9px]">
-                      <span>Description</span>
-                      <span className="text-center">Rate / Details</span>
-                      <span className="text-right">Total Amount</span>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Invoice Details</span>
+                  <div className="border border-slate-100 rounded-xl p-4 space-y-3 text-xs">
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-slate-600">Base Freight Amount</span>
+                      <span className="font-mono font-bold text-slate-900">₹{viewingInvoice.amount.toLocaleString()}</span>
                     </div>
-                    <div className="p-3 space-y-3">
-                      <div className="grid grid-cols-3">
-                        <span className="font-semibold text-slate-800">Approved Base Freight</span>
-                        <span className="text-center text-slate-500 font-mono">Base Bid Value</span>
-                        <span className="text-right font-semibold font-mono text-slate-800">₹{viewingInvoice.amount.toLocaleString()}</span>
-                      </div>
-                      <div className="grid grid-cols-3">
-                        <span className="font-semibold text-slate-800">GST (5%)</span>
-                        <span className="text-center text-slate-500 font-mono">CGST/SGST</span>
-                        <span className="text-right font-semibold font-mono text-slate-800">₹{viewingInvoice.tax.toLocaleString()}</span>
-                      </div>
-                      {viewingInvoice.extraCharges > 0 && (
-                        <div className="grid grid-cols-3">
-                          <span className="font-semibold text-slate-800">Extra Loading/Detention</span>
-                          <span className="text-center text-slate-500 font-mono">Manual Provision</span>
-                          <span className="text-right font-semibold font-mono text-slate-800">₹{viewingInvoice.extraCharges.toLocaleString()}</span>
-                        </div>
-                      )}
+                    <div className="flex justify-between border-t pt-2.5">
+                      <span className="font-bold text-slate-800">Total Invoice Value</span>
+                      <span className="font-mono font-extrabold text-primary text-sm">₹{viewingInvoice.amount.toLocaleString()}</span>
                     </div>
                   </div>
                 </div>
 
+                {/* Submitted Documents & Verification */}
+                <div className="space-y-2 border-t pt-4">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Submitted Audit Documents</span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {viewingInvoice.rcUrl ? (
+                      <a 
+                        href={viewingInvoice.rcUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1 p-2 bg-slate-50 border rounded-lg text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-primary transition-all text-center"
+                      >
+                        <FileText size={12} className="text-blue-500" /> View RC
+                      </a>
+                    ) : (
+                      <span className="p-2 bg-slate-50 border rounded-lg text-[10px] text-center text-slate-400">No RC Uploaded</span>
+                    )}
+                    {viewingInvoice.insuranceUrl ? (
+                      <a 
+                        href={viewingInvoice.insuranceUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1 p-2 bg-slate-50 border rounded-lg text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-primary transition-all text-center"
+                      >
+                        <FileText size={12} className="text-blue-500" /> View Insurance
+                      </a>
+                    ) : (
+                      <span className="p-2 bg-slate-50 border rounded-lg text-[10px] text-center text-slate-400">No Insurance</span>
+                    )}
+                    {viewingInvoice.invoiceUrl ? (
+                      <a 
+                        href={viewingInvoice.invoiceUrl} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-1 p-2 bg-emerald-50 border border-emerald-100 rounded-lg text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900 transition-all text-center"
+                      >
+                        <FileText size={12} className="text-emerald-500" /> View Invoice
+                      </a>
+                    ) : (
+                      <span className="p-2 bg-slate-50 border rounded-lg text-[10px] text-center text-slate-400">No Invoice file</span>
+                    )}
+                  </div>
+                  
+                  {/* Inline Uploaded Invoice Image View */}
+                  {viewingInvoice.invoiceUrl && (
+                    <div className="space-y-2 border-t pt-4">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Uploaded Invoice Document</span>
+                      <div className="border border-slate-100 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center p-2 relative group max-h-[220px]">
+                        <img 
+                          src={viewingInvoice.invoiceUrl} 
+                          alt="Transporter Invoice" 
+                          className="object-contain max-h-[200px] w-full rounded shadow-xs" 
+                        />
+                      </div>
+                    </div>
+                  )}
+
+                  {viewingInvoice.invoiceRemarks && (
+                    <div className="bg-amber-50/50 border border-amber-100 p-2.5 rounded-lg mt-2">
+                      <span className="text-[9px] font-bold text-amber-800 uppercase block">Remarks from Transporter/Driver:</span>
+                      <p className="text-[11px] text-slate-600 italic mt-0.5">{viewingInvoice.invoiceRemarks}</p>
+                    </div>
+                  )}
+                </div>
+
                 {/* Final payable */}
                 <div className="bg-slate-50 rounded-xl p-4 flex justify-between items-center border border-slate-100">
-                  <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Final Payable Amount</span>
-                  <span className="text-xl font-black font-mono text-primary">₹{viewingInvoice.finalAmount.toLocaleString('en-IN')}</span>
+                  <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Total Invoice Amount</span>
+                  <span className="text-xl font-black font-mono text-primary">₹{viewingInvoice.amount.toLocaleString('en-IN')}</span>
                 </div>
 
               </div>
@@ -551,46 +441,31 @@ export default function Payments() {
                 <Button variant="outline" onClick={() => setViewingInvoice(null)} className="h-9 px-4 border-slate-200">
                   Close
                 </Button>
-                <Button 
-                  onClick={() => triggerMockDownload('Invoice PDF', viewingInvoice.invoiceId, `invoice-modal-${viewingInvoice.invoiceId}`)}
-                  className="bg-primary hover:bg-primary-hover text-white h-9 px-4 shadow-sm font-bold uppercase text-xs tracking-wider flex items-center gap-1.5"
-                >
-                  <Download size={14} /> Download PDF
-                </Button>
+                {viewingInvoice.invoiceUrl ? (
+                  <a 
+                    href={viewingInvoice.invoiceUrl} 
+                    download={`invoice-${viewingInvoice.invoiceId}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 bg-primary hover:bg-primary-hover text-white h-9 px-4 rounded shadow-sm font-bold uppercase text-xs tracking-wider transition-all"
+                  >
+                    <Download size={14} /> Download Invoice File
+                  </a>
+                ) : (
+                  <Button 
+                    disabled 
+                    className="bg-slate-300 text-slate-500 h-9 px-4 rounded font-bold uppercase text-xs tracking-wider cursor-not-allowed"
+                  >
+                    <Download size={14} /> No Invoice File
+                  </Button>
+                )}
               </div>
             </div>
           )}
         </DialogContent>
       </Dialog>
 
-      {/* MODAL 3: Release Payment Confirmation */}
-      <Dialog open={!!releasingPayment} onOpenChange={(val) => !val && setReleasingPayment(null)}>
-        <DialogContent className="sm:max-w-[400px] border-0 rounded-2xl shadow-xl bg-white p-6">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <AlertTriangle size={18} className="text-emerald-500 animate-pulse" /> Release Transport Payout
-            </DialogTitle>
-            <DialogDescription className="text-sm text-slate-500 mt-2">
-              Are you sure you want to release the final settled amount of <span className="font-extrabold text-slate-800">₹{releasingPayment?.finalAmount.toLocaleString()}</span> to <span className="font-extrabold text-slate-800">{releasingPayment?.transporter}</span>?
-            </DialogDescription>
-          </DialogHeader>
-          <div className="my-4 p-3 bg-slate-50 rounded-lg text-xs space-y-1.5 text-slate-700">
-            <p><span className="text-slate-400 font-medium">Transaction ID:</span> <span className="font-mono font-bold">{releasingPayment?.paymentId}</span></p>
-            <p><span className="text-slate-400 font-medium">Settlement Mode:</span> <span className="font-bold text-slate-900">{releasingPayment?.paymentMethod}</span></p>
-          </div>
-          <DialogFooter className="flex gap-2 sm:justify-end">
-            <Button variant="outline" onClick={() => setReleasingPayment(null)} className="border-slate-200">
-              Cancel
-            </Button>
-            <Button 
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold"
-              onClick={handleReleaseConfirm}
-            >
-              Confirm Settlement
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+
 
       {/* MODAL 4: Payment History & Finance Analytics Portal */}
       <Dialog open={isHistoryOpen} onOpenChange={setIsHistoryOpen}>

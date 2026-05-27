@@ -314,28 +314,28 @@ export default function CreateLoadPage() {
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
-                      {/* Dispatch Date */}
-                      <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                          Dispatch Date <span className="text-red-500">*</span>
-                        </label>
-                        <Input 
-                          type="date"
-                          name="dispatchDate"
-                          value={formData.dispatchDate}
-                          onChange={handleChange}
-                          className={`bg-white border-gray-200 shadow-sm ${errors.dispatchDate ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
-                        />
-                        {errors.dispatchDate && <p className="text-xs text-red-500 animate-in fade-in">{errors.dispatchDate}</p>}
-                      </div>
+                    {/* Dispatch Date */}
+                    <div className="space-y-1.5">
+                      <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                        Dispatch Date <span className="text-red-500">*</span>
+                      </label>
+                      <Input 
+                        type="date"
+                        name="dispatchDate"
+                        value={formData.dispatchDate}
+                        onChange={handleChange}
+                        className={`bg-white border-gray-200 shadow-sm ${errors.dispatchDate ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
+                      />
+                      {errors.dispatchDate && <p className="text-xs text-red-500 animate-in fade-in">{errors.dispatchDate}</p>}
+                    </div>
 
-                      {/* End Date */}
+                    <div className="grid grid-cols-2 gap-4">
+                      {/* Load End Date */}
                       <div className="space-y-1.5">
                         <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
                           <Calendar className="w-3.5 h-3.5 text-gray-400" />
-                          End Date <span className="text-red-500">*</span>
+                          Load End Date <span className="text-red-500">*</span>
                         </label>
                         <Input 
                           type="date"
@@ -346,22 +346,22 @@ export default function CreateLoadPage() {
                         />
                         {errors.endDate && <p className="text-xs text-red-500 animate-in fade-in">{errors.endDate}</p>}
                       </div>
-                    </div>
 
-                    {/* End Time */}
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-gray-400" />
-                        End Time <span className="text-red-500">*</span>
-                      </label>
-                      <Input 
-                        type="time"
-                        name="endTime"
-                        value={formData.endTime}
-                        onChange={handleChange}
-                        className={`bg-white border-gray-200 shadow-sm ${errors.endTime ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
-                      />
-                      {errors.endTime && <p className="text-xs text-red-500 animate-in fade-in">{errors.endTime}</p>}
+                      {/* Load End Time */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-gray-400" />
+                          Load End Time <span className="text-red-500">*</span>
+                        </label>
+                        <Input 
+                          type="time"
+                          name="endTime"
+                          value={formData.endTime}
+                          onChange={handleChange}
+                          className={`bg-white border-gray-200 shadow-sm ${errors.endTime ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
+                        />
+                        {errors.endTime && <p className="text-xs text-red-500 animate-in fade-in">{errors.endTime}</p>}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-4">

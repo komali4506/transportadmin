@@ -110,6 +110,8 @@ export default function Transporters() {
             ifsc: 'PENDING',
             upiId: 'PENDING',
             status: 'Pending' as const,
+            role: user.role,
+            trucks: user.trucks || [],
             documents: mappedDocuments
           };
         });
@@ -171,12 +173,18 @@ export default function Transporters() {
   const [selectedProfile, setSelectedProfile] = useState<TransporterProfile | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [blacklistingTarget, setBlacklistingTarget] = useState<TransporterProfile | null>(null);
+  const isTransporter = selectedProfile ? selectedProfile.role !== 'Driver' : false;
   
   // Document Viewer States
   const [previewDocKey, setPreviewDocKey] = useState<keyof TransporterProfile['documents'] | null>(null);
   const [previewRemarks, setPreviewRemarks] = useState('');
   const [zoomScale, setZoomScale] = useState(1);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Dynamic Transporter Truck Document Verification States
+  const [previewTruck, setPreviewTruck] = useState<any | null>(null);
+  const [previewTruckDocType, setPreviewTruckDocType] = useState<'RC' | 'INSURANCE' | null>(null);
+  const [previewTruckRemarks, setPreviewTruckRemarks] = useState('');
 
   // Editable Profile Form Fields
   const [editForm, setEditForm] = useState<Partial<TransporterProfile>>({});
@@ -413,6 +421,68 @@ export default function Transporters() {
     }
   };
 
+  const handleVerifyTruckDoc = async (truckId: string, docType: 'RC' | 'INSURANCE', status: 'APPROVED' | 'REJECTED') => {
+    try {
+      setIsLoading(true);
+      await apiClient.verifyTruck(truckId, docType, status, previewTruckRemarks);
+      
+      toast({
+        title: status === 'APPROVED' ? "Vehicle Document Approved" : "Vehicle Document Rejected",
+        description: `Successfully verified ${docType} for the vehicle.`,
+        className: status === 'APPROVED' ? "bg-green-600 text-white border-none font-bold shadow-md" : "bg-rose-600 text-white border-none font-bold shadow-md"
+      });
+
+      // Dynamically update the truck document status in local state to refresh the UI immediately!
+      setBackendPendingUsers(prev => prev.map(u => {
+        if (u.trucks) {
+          const updatedTrucks = u.trucks.map((tk: any) => {
+            if (tk.id === truckId) {
+              return {
+                ...tk,
+                [docType === 'RC' ? 'rc_status' : 'insurance_status']: status,
+                [docType === 'RC' ? 'rc_rejection_reason' : 'insurance_rejection_reason']: status === 'REJECTED' ? previewTruckRemarks : null
+              };
+            }
+            return tk;
+          });
+          return { ...u, trucks: updatedTrucks };
+        }
+        return u;
+      }));
+
+      setSelectedProfile(prev => {
+        if (prev && prev.trucks) {
+          const updatedTrucks = prev.trucks.map((tk: any) => {
+            if (tk.id === truckId) {
+              return {
+                ...tk,
+                [docType === 'RC' ? 'rc_status' : 'insurance_status']: status,
+                [docType === 'RC' ? 'rc_rejection_reason' : 'insurance_rejection_reason']: status === 'REJECTED' ? previewTruckRemarks : null
+              };
+            }
+            return tk;
+          });
+          return { ...prev, trucks: updatedTrucks };
+        }
+        return prev;
+      });
+
+      setPreviewTruck(null);
+      setPreviewTruckDocType(null);
+      setPreviewTruckRemarks('');
+      await fetchBackendUsers();
+    } catch (error: any) {
+      console.error("Error verifying truck document:", error);
+      toast({
+        title: "Vehicle Document Verification Failed",
+        description: error.message || "An unexpected error occurred while saving verification choices.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleEditClick = (profile: TransporterProfile) => {
     setEditForm({
       ownerName: profile.ownerName,
@@ -521,7 +591,7 @@ export default function Transporters() {
       </div>
 
       {/* Modern KPI Stats Analytics Grid */}
-      <div className="grid grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Card className="border-0 shadow-xs p-4 bg-slate-900 text-white relative overflow-hidden">
           <div className="absolute right-2 bottom-2 text-slate-800 opacity-20">
             <Truck size={60} />
@@ -548,172 +618,13 @@ export default function Transporters() {
           <h3 className="text-2xl font-extrabold font-mono text-emerald-600 mt-1">{stats.approved}</h3>
           <span className="text-[9px] text-slate-500 font-medium">compliant fleet partners</span>
         </Card>
-
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-rose-100 opacity-30">
-            <ShieldAlert size={60} />
-          </div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Blacklisted</p>
-          <h3 className="text-2xl font-extrabold font-mono text-rose-600 mt-1">{stats.blacklisted}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">denied access</span>
-        </Card>
-
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-red-100 opacity-30">
-            <AlertTriangle size={60} />
-          </div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Expired Docs</p>
-          <h3 className="text-2xl font-extrabold font-mono text-red-600 mt-1">{stats.expiredDocs}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">require renewals</span>
-        </Card>
-
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-slate-200 opacity-30">
-            <Activity size={60} />
-          </div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active Heavy Fleet</p>
-          <h3 className="text-2xl font-extrabold font-mono text-slate-900 mt-1">{stats.activeFleet}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">live trucks registered</span>
-        </Card>
       </div>
 
-      {/* Enterprise Two-Column Workspace Layout */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
+      {/* Enterprise Workspace Layout */}
+      <div className="w-full space-y-6">
         
-        {/* LEFT COLUMN: Compliance Alerts, Expiry Lists, AI Risk Radar */}
-        <div className="xl:col-span-1 space-y-6">
-
-          {/* Pending KYC Reviews List */}
-          <Card className="border-0 shadow-sm bg-white overflow-hidden">
-            <CardHeader className="border-b border-slate-50 p-5 bg-slate-50/20">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <Clock size={14} className="text-amber-500" /> Pending KYC Reviews ({pendingReviews.length})
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] font-semibold border-slate-200">Action Required</Badge>
-              </div>
-              <CardDescription className="text-[11px] text-slate-400 mt-0.5">Transporters waiting for manual document verification.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
-              <AnimatePresence>
-                {pendingReviews.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic text-center py-6">All transporters are verified.</p>
-                ) : (
-                  pendingReviews.map((tr) => (
-                    <motion.div 
-                      key={tr.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      onClick={() => { setSelectedProfile(tr); setIsEditing(false); }}
-                      className="p-3 bg-slate-50 hover:bg-slate-100/70 border border-slate-100 hover:border-slate-200 rounded-xl flex items-center justify-between cursor-pointer transition-all"
-                    >
-                      <div className="space-y-1">
-                        <p className="text-xs font-bold text-slate-800">{tr.companyName}</p>
-                        <div className="flex items-center gap-2 text-[10px] text-slate-400">
-                          <span>Owner: {tr.ownerName}</span>
-                          <span>•</span>
-                          <span className="font-mono text-[9px] font-bold">{tr.id}</span>
-                        </div>
-                      </div>
-                      <Badge className="bg-amber-100 text-amber-800 border-none font-bold text-[9px] uppercase px-1.5 py-0.5">
-                        {tr.status}
-                      </Badge>
-                    </motion.div>
-                  ))
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
-
-          {/* Expired Documents compliance alerts queue */}
-          <Card className="border-0 shadow-sm bg-white overflow-hidden">
-            <CardHeader className="border-b border-slate-50 p-5 bg-slate-50/20">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <AlertTriangle size={14} className="text-red-500" /> Compliance Expiry Alerts ({expiredAlerts.length})
-                </CardTitle>
-                <Badge variant="outline" className="text-[10px] font-semibold text-red-600 bg-red-50 border-red-100">Expired</Badge>
-              </div>
-              <CardDescription className="text-[11px] text-slate-400 mt-0.5">Active profiles containing expired transport certificates.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
-              <AnimatePresence>
-                {expiredAlerts.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic text-center py-6">No expired credentials detected.</p>
-                ) : (
-                  expiredAlerts.map((alert) => (
-                    <motion.div 
-                      key={alert.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      onClick={() => { setSelectedProfile(alert.transporter); setIsEditing(false); }}
-                      className="p-3 bg-red-50/20 hover:bg-red-50/40 border border-red-100/50 rounded-xl flex items-center justify-between cursor-pointer transition-all"
-                    >
-                      <div className="space-y-0.5">
-                        <p className="text-xs font-bold text-slate-800">{alert.companyName}</p>
-                        <p className="text-[10px] text-red-700 font-semibold capitalize flex items-center gap-1">
-                          <XCircle size={10} /> {alert.docName} Expired
-                        </p>
-                      </div>
-                      <Button size="icon" variant="ghost" className="h-7 w-7 text-red-600 hover:bg-red-100/30">
-                        <Eye size={12} />
-                      </Button>
-                    </motion.div>
-                  ))
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
-
-
-
-          {/* Duplicate Detection Alerts */}
-          <Card className="border-0 shadow-sm bg-white overflow-hidden">
-            <CardHeader className="border-b border-slate-50 p-5 bg-slate-50/20">
-              <div className="flex justify-between items-center">
-                <CardTitle className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-                  <ShieldIcon size={14} className="text-amber-500" /> Database Duplicate Scanner
-                </CardTitle>
-                <Badge className="bg-amber-100 text-amber-800 border-none font-bold text-[9px] uppercase px-1.5 py-0.5">
-                  Real-time Auditing
-                </Badge>
-              </div>
-              <CardDescription className="text-[11px] text-slate-400 mt-0.5">Flagged records sharing identical TAX identifiers or phones.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-4 space-y-3 max-h-[300px] overflow-y-auto custom-scrollbar">
-              <AnimatePresence>
-                {duplicateAlerts.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic text-center py-6">No duplicate tax/phone records found.</p>
-                ) : (
-                  duplicateAlerts.map((alert) => (
-                    <motion.div 
-                      key={alert.id}
-                      initial={{ opacity: 0, y: 10 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, x: -10 }}
-                      onClick={() => { setSelectedProfile(alert.transporter); setIsEditing(false); }}
-                      className="p-3 bg-amber-50/30 hover:bg-amber-50/60 border border-amber-100 rounded-xl flex items-center justify-between cursor-pointer transition-all animate-pulse"
-                    >
-                      <div className="space-y-0.5">
-                        <p className="text-xs font-bold text-slate-800">{alert.companyName}</p>
-                        <p className="text-[9px] text-amber-800 font-bold uppercase tracking-wider">
-                          Shared {alert.type}: <span className="font-mono">{alert.value}</span>
-                        </p>
-                      </div>
-                      <AlertCircle size={14} className="text-amber-600" />
-                    </motion.div>
-                  ))
-                )}
-              </AnimatePresence>
-            </CardContent>
-          </Card>
-
-        </div>
-
-        {/* RIGHT COLUMN: Search/Filters, Main Transporter Table, Compliance Actions */}
-        <div className="xl:col-span-2 space-y-6">
+        {/* Main Transporter Table, Compliance Actions */}
+        <div className="w-full space-y-6">
           
           <Card className="border-none shadow-sm bg-white">
             <CardHeader className="pb-3 border-b border-slate-100">
@@ -1096,45 +1007,133 @@ export default function Transporters() {
                       </div>
                     </div>
 
-                    {/* KYC Document Audit Hub */}
+                    {/* KYC/KYT Document Registry */}
                     <div className="space-y-3">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-                        <span>KYC Document Registry</span>
+                        <span>{isTransporter ? "KYT Document Registry" : "KYC Document Registry"}</span>
                         <span className="text-[10px] text-slate-400 lowercase font-medium">Click document to verify/preview</span>
                       </h4>
                       
                       <div className="grid grid-cols-1 gap-2">
-                        {Object.entries(selectedProfile.documents).map(([key, value]) => {
-                          const val = value as TransporterProfile['documents'][keyof TransporterProfile['documents']];
-                          return (
-                            <div 
-                              key={key} 
-                              onClick={() => { setPreviewDocKey(key as any); setPreviewRemarks(val.remarks); }}
-                              className="border border-slate-100 hover:border-slate-300 hover:bg-slate-50/50 cursor-pointer rounded-xl p-3.5 flex justify-between items-center transition-all"
-                            >
-                              <div className="flex items-center gap-3 text-xs">
-                                <div className="p-2 bg-slate-100 text-slate-500 rounded-lg">
-                                  <FileText size={14} />
+                        {Object.entries(selectedProfile.documents)
+                          .filter(([key]) => {
+                            if (isTransporter && (key === 'vehicleRc' || key === 'insurance' || key === 'vehiclePhotos')) {
+                              return false;
+                            }
+                            return true;
+                          })
+                          .map(([key, value]) => {
+                            const val = value as TransporterProfile['documents'][keyof TransporterProfile['documents']];
+                            return (
+                              <div 
+                                key={key} 
+                                onClick={() => { setPreviewDocKey(key as any); setPreviewRemarks(val.remarks); }}
+                                className="border border-slate-100 hover:border-slate-300 hover:bg-slate-50/50 cursor-pointer rounded-xl p-3.5 flex justify-between items-center transition-all"
+                              >
+                                <div className="flex items-center gap-3 text-xs">
+                                  <div className="p-2 bg-slate-100 text-slate-500 rounded-lg">
+                                    <FileText size={14} />
+                                  </div>
+                                  <div className="space-y-0.5">
+                                    <span className="font-bold text-slate-800 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
+                                    {val.expiryDate && (
+                                      <span className="text-[10px] text-slate-400 block">Expires: {val.expiryDate}</span>
+                                    )}
+                                  </div>
                                 </div>
-                                <div className="space-y-0.5">
-                                  <span className="font-bold text-slate-800 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                                  {val.expiryDate && (
-                                    <span className="text-[10px] text-slate-400 block">Expires: {val.expiryDate}</span>
-                                  )}
+                                <div className="flex items-center gap-2">
+                                  {getDocStatusBadge(val.status)}
+                                  <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400">
+                                    <Eye size={12} />
+                                  </Button>
                                 </div>
                               </div>
-                              <div className="flex items-center gap-2">
-                                {getDocStatusBadge(val.status)}
-                                <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400">
-                                  <Eye size={12} />
-                                </Button>
-                              </div>
-                            </div>
-                          );
-                        })}
+                            );
+                          })}
                       </div>
                     </div>
 
+                    {/* Transporter Fleet & Trucks Audit Section */}
+                    {isTransporter && (
+                      <div className="space-y-4 pt-4 border-t border-slate-100">
+                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+                          <span>Registered Fleet & Trucks ({selectedProfile.trucks?.length || 0})</span>
+                          <span className="text-[10px] text-slate-400 lowercase font-medium">Verify individual truck documents</span>
+                        </h4>
+
+                        {(!selectedProfile.trucks || selectedProfile.trucks.length === 0) ? (
+                          <div className="p-6 bg-slate-50/50 border border-dashed rounded-xl text-center">
+                            <Truck className="mx-auto text-slate-300 mb-2" size={24} />
+                            <p className="text-xs text-slate-500">No trucks registered under this transporter yet.</p>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            {selectedProfile.trucks.map((truck: any) => {
+                              const rcStatus = truck.rc_status || 'PENDING';
+                              const insStatus = truck.insurance_status || 'PENDING';
+
+                              return (
+                                <div key={truck.id} className="border border-slate-100 bg-white rounded-xl p-4 space-y-3 shadow-xs">
+                                  <div className="flex justify-between items-start">
+                                    <div>
+                                      <span className="font-mono text-xs font-extrabold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">{truck.truck_number}</span>
+                                      <p className="text-xs font-bold text-slate-700 mt-1">{truck.truck_name}</p>
+                                    </div>
+                                    <Badge className="bg-slate-900 text-white text-[9px] font-bold">Truck Details</Badge>
+                                  </div>
+
+                                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-50">
+                                    {/* RC document preview & verification status card */}
+                                    <div 
+                                      onClick={() => {
+                                        setPreviewTruck(truck);
+                                        setPreviewTruckDocType('RC');
+                                        setPreviewTruckRemarks(truck.rc_rejection_reason || '');
+                                      }}
+                                      className="border border-slate-100 hover:border-slate-300 hover:bg-slate-50/50 cursor-pointer p-2.5 rounded-lg flex flex-col justify-between transition-all"
+                                    >
+                                      <div>
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Vehicle RC</span>
+                                        <span className="text-[10px] text-slate-700 font-medium block mt-0.5 truncate">{truck.rc_file_path?.split(/[\\/]/).pop()}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-50/50">
+                                        <Badge className={`text-[8px] font-bold border-none ${
+                                          rcStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700' :
+                                          rcStatus === 'REJECTED' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'
+                                        }`}>{rcStatus === 'APPROVED' ? 'Verified' : rcStatus === 'REJECTED' ? 'Rejected' : 'Pending Verification'}</Badge>
+                                        <Eye size={10} className="text-slate-400" />
+                                      </div>
+                                    </div>
+
+                                    {/* Insurance document preview & verification status card */}
+                                    <div 
+                                      onClick={() => {
+                                        setPreviewTruck(truck);
+                                        setPreviewTruckDocType('INSURANCE');
+                                        setPreviewTruckRemarks(truck.insurance_rejection_reason || '');
+                                      }}
+                                      className="border border-slate-100 hover:border-slate-300 hover:bg-slate-50/50 cursor-pointer p-2.5 rounded-lg flex flex-col justify-between transition-all"
+                                    >
+                                      <div>
+                                        <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider block">Vehicle Insurance</span>
+                                        <span className="text-[10px] text-slate-700 font-medium block mt-0.5 truncate">{truck.insurance_file_path?.split(/[\\/]/).pop()}</span>
+                                      </div>
+                                      <div className="flex items-center justify-between mt-2 pt-1 border-t border-slate-50/50">
+                                        <Badge className={`text-[8px] font-bold border-none ${
+                                          insStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700' :
+                                          insStatus === 'REJECTED' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'
+                                        }`}>{insStatus === 'APPROVED' ? 'Verified' : insStatus === 'REJECTED' ? 'Rejected' : 'Pending Verification'}</Badge>
+                                        <Eye size={10} className="text-slate-400" />
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
               </div>
@@ -1223,6 +1222,99 @@ export default function Transporters() {
                 <div className="p-4 bg-slate-100 border-t flex justify-between items-center">
                   <span className="text-[10px] text-slate-500 font-medium">Remarks: {doc.remarks}</span>
                   <Button variant="outline" onClick={() => setPreviewDocKey(null)} className="h-8 text-xs">
+                    Cancel Audit
+                  </Button>
+                </div>
+              </div>
+            );
+          })()}
+        </DialogContent>
+      </Dialog>
+
+      {/* Dynamic Transporter Truck Document Preview Dialog */}
+      <Dialog open={!!previewTruck && !!previewTruckDocType} onOpenChange={(val) => !val && setPreviewTruck(null)}>
+        <DialogContent className="sm:max-w-[750px] border-0 rounded-2xl shadow-xl bg-white p-0 overflow-hidden font-sans">
+          {previewTruck && previewTruckDocType && (() => {
+            const fileName = previewTruckDocType === 'RC' ? previewTruck.rc_file_path : previewTruck.insurance_file_path;
+            const fileUrl = fileName ? `${apiClient.getApiUrl()}/uploads/${fileName.split(/[\\/]/).pop()}` : '';
+            const docStatus = previewTruckDocType === 'RC' ? previewTruck.rc_status : previewTruck.insurance_status;
+            
+            return (
+              <div className="flex flex-col">
+                <div className="bg-slate-900 text-white p-5 flex justify-between items-center">
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Transporter Fleet Audit</span>
+                    <h3 className="text-sm font-bold capitalize">Vehicle {previewTruckDocType} - {previewTruck.truck_number}</h3>
+                    <span className="text-xs text-slate-400 font-mono block">Truck Name: {previewTruck.truck_name}</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" onClick={() => setZoomScale(s => Math.min(2, s + 0.1))} className="h-7 w-7 text-slate-400 hover:text-white"><ZoomIn size={14} /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => setZoomScale(s => Math.max(0.5, s - 0.1))} className="h-7 w-7 text-slate-400 hover:text-white"><ZoomOut size={14} /></Button>
+                    <Button variant="ghost" size="icon" onClick={() => setIsFullscreen(!isFullscreen)} className="h-7 w-7 text-slate-400 hover:text-white"><Maximize2 size={14} /></Button>
+                  </div>
+                </div>
+
+                {/* Main preview split */}
+                <div className="grid grid-cols-1 md:grid-cols-3 h-[450px]">
+                  
+                  {/* Left: Interactive Media Preview */}
+                  <div className="md:col-span-2 bg-slate-950 flex items-center justify-center overflow-hidden p-6 relative">
+                    {fileUrl ? (
+                      <img 
+                        src={fileUrl} 
+                        alt="Vehicle Doc Preview"
+                        className="max-h-full max-w-full rounded shadow-md object-contain transition-transform"
+                        style={{ transform: `scale(${zoomScale})` }}
+                      />
+                    ) : (
+                      <span className="text-slate-400 text-xs">No image available</span>
+                    )}
+                  </div>
+
+                  {/* Right: Audit decisions */}
+                  <div className="md:col-span-1 border-l border-slate-100 p-5 flex flex-col justify-between bg-slate-50/50">
+                    <div className="space-y-4">
+                      <div>
+                        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Document Status</span>
+                        <div className="mt-1.5">
+                          <Badge className={`text-[10px] font-bold border-none ${
+                            docStatus === 'APPROVED' ? 'bg-emerald-50 text-emerald-700' :
+                            docStatus === 'REJECTED' ? 'bg-rose-50 text-rose-700' : 'bg-amber-50 text-amber-700'
+                          }`}>{docStatus === 'APPROVED' ? 'Verified' : docStatus === 'REJECTED' ? 'Rejected' : 'Pending Verification'}</Badge>
+                        </div>
+                      </div>
+
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase">Audit Remarks / Feedback</label>
+                        <textarea
+                          value={previewTruckRemarks}
+                          onChange={e => setPreviewTruckRemarks(e.target.value)}
+                          placeholder="e.g. Document image is clear and verified..."
+                          className="w-full h-[120px] rounded-lg border border-slate-200 p-2.5 text-xs outline-none bg-white focus:ring-1 focus:ring-primary leading-snug"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 pt-4 border-t">
+                      <Button 
+                        onClick={() => handleVerifyTruckDoc(previewTruck.id, previewTruckDocType, 'APPROVED')}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold h-9 uppercase text-[10px] tracking-wider shadow-xs"
+                      >
+                        Approve Document
+                      </Button>
+                      <Button 
+                        onClick={() => handleVerifyTruckDoc(previewTruck.id, previewTruckDocType, 'REJECTED')}
+                        className="w-full bg-rose-600 hover:bg-rose-700 text-white font-bold h-9 uppercase text-[10px] tracking-wider shadow-xs"
+                      >
+                        Reject Document
+                      </Button>
+                    </div>
+                  </div>
+
+                </div>
+
+                <div className="p-4 bg-slate-100 border-t flex justify-end">
+                  <Button variant="outline" onClick={() => { setPreviewTruck(null); setPreviewTruckDocType(null); }} className="h-8 text-xs">
                     Cancel Audit
                   </Button>
                 </div>

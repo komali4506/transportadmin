@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { useLoadStore } from './loadStore';
+import { apiClient } from '../services/apiClient';
 
 export interface PaymentEntry {
   paymentId: string;
@@ -13,11 +13,20 @@ export interface PaymentEntry {
   status: 'Pending' | 'Processing' | 'Completed' | 'Failed' | 'Under Review' | 'Released';
   createdAt: string;
   invoiceId: string;
+  invoiceUrl?: string;
+  invoiceRemarks?: string;
+  rcUrl?: string;
+  insuranceUrl?: string;
   paymentMethod: 'Bank Transfer' | 'UPI' | 'RTGS' | 'NEFT';
 }
 
 interface PaymentState {
   payments: PaymentEntry[];
+  isLoading: boolean;
+  fetchInvoicesFromBackend: () => Promise<void>;
+  settlePaymentOnBackend: (tripId: string, paymentMethod: 'Bank Transfer' | 'UPI' | 'RTGS' | 'NEFT', extraCharges: number) => Promise<void>;
+  
+  // Legacy / Local fallback compatibility methods
   addPayment: (payment: Omit<PaymentEntry, 'paymentId' | 'invoiceId' | 'createdAt'>) => void;
   releasePayment: (paymentId: string) => void;
   updatePaymentStatus: (paymentId: string, status: PaymentEntry['status']) => void;
@@ -26,7 +35,57 @@ interface PaymentState {
 
 export const usePaymentStore = create<PaymentState>((set, get) => ({
   payments: [],
+  isLoading: false,
 
+  fetchInvoicesFromBackend: async () => {
+    set({ isLoading: true });
+    try {
+      const data = await apiClient.getAdminInvoices();
+      const mapped: PaymentEntry[] = data.map((t: any) => {
+        const freight = t.amount || 0;
+        const tax = 0;
+        const extra = 0;
+        const finalAmount = freight;
+        
+        const transporterName = t.assigned_user?.company_name || t.assigned_user?.name || 'Carrier';
+        
+        return {
+          paymentId: t.id,
+          loadId: t.load_id,
+          transporter: transporterName,
+          amount: freight,
+          penalty: 0,
+          tax,
+          extraCharges: extra,
+          finalAmount,
+          status: t.invoice_status === 'PAID' ? 'Released' : 'Pending',
+          createdAt: t.invoice_created_at ? t.invoice_created_at.split('T')[0] : (t.created_at ? t.created_at.split('T')[0] : 'N/A'),
+          invoiceId: t.invoice_number || 'N/A',
+          invoiceUrl: t.invoice_url ? `${apiClient.getApiUrl()}${t.invoice_url}` : undefined,
+          invoiceRemarks: t.invoice_remarks || '',
+          rcUrl: t.rc_url ? `${apiClient.getApiUrl()}${t.rc_url}` : undefined,
+          insuranceUrl: t.insurance_url ? `${apiClient.getApiUrl()}${t.insurance_url}` : undefined,
+          paymentMethod: (t.payment_method || 'Bank Transfer') as any,
+        };
+      });
+      set({ payments: mapped, isLoading: false });
+    } catch (err) {
+      console.error("Failed to fetch invoices:", err);
+      set({ isLoading: false });
+    }
+  },
+
+  settlePaymentOnBackend: async (tripId, paymentMethod, extraCharges) => {
+    try {
+      await apiClient.payTripInvoice(tripId, { paymentMethod, extraCharges });
+      await get().fetchInvoicesFromBackend();
+    } catch (err) {
+      console.error("Failed to settle payment on backend:", err);
+      throw err;
+    }
+  },
+
+  // Fallbacks for offline demo modes (Zustand backward compatibility)
   addPayment: (payment) => {
     const idSuffix = Math.floor(1000 + Math.random() * 9000);
     const newEntry: PaymentEntry = {
@@ -55,30 +114,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
   },
 
   syncPaymentsFromLoads: () => {
-    const loads = useLoadStore.getState().loads;
-    const completedLoads = loads.filter(l => l.status === 'Completed');
-    const existingLoadIds = get().payments.map(p => p.loadId);
-
-    completedLoads.forEach(load => {
-      if (!existingLoadIds.includes(load.id)) {
-        const freight = load.totalFreight || 0;
-        const penalty = 0; // delay/shortage calculation removed
-        const tax = Math.round(freight * 0.05); // 5% GST
-        const extraCharges = 0;
-        const finalAmount = freight + tax + extraCharges - penalty;
-
-        get().addPayment({
-          loadId: load.id,
-          transporter: load.assignedTransporter?.companyName || 'Delhi Roadlines',
-          amount: freight,
-          penalty,
-          tax,
-          extraCharges,
-          finalAmount,
-          status: 'Pending',
-          paymentMethod: 'Bank Transfer'
-        });
-      }
-    });
+    // If connected to dynamic backend, it will be handled by fetchInvoicesFromBackend.
+    // We run it as fallback when backend is unreachable or local.
   }
 }));

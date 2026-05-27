@@ -156,7 +156,7 @@ export const useLoadStore = create<LoadState>((set, get) => ({
           if (!load.bids || load.bids.length === 0) {
             return {
               ...load,
-              bids: generateMockBids(load)
+              bids: conn.mode === 'live' ? [] : generateMockBids(load)
             };
           }
           return load;
@@ -204,9 +204,10 @@ export const useLoadStore = create<LoadState>((set, get) => ({
   },
   
   addLoad: async (load) => {
+    const isLive = get().connectionMode === 'live';
     const loadWithBids = {
       ...load,
-      bids: load.bids && load.bids.length > 0 ? load.bids : generateMockBids(load)
+      bids: load.bids && load.bids.length > 0 ? load.bids : (isLive ? [] : generateMockBids(load))
     };
     
     // Optimistic UI updates

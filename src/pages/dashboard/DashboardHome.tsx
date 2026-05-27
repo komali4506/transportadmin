@@ -56,10 +56,16 @@ export default function DashboardHome() {
   const stats = useMemo(() => {
     const total = loads.length;
     const open = loads.filter(l => l.status === 'Open').length;
-    const assigned = loads.filter(l => l.status === 'Assigned & Dispatched').length;
+    const assigned = loads.filter(l => l.status === 'Assigned & Dispatched' || l.status === 'CLOSED').length;
     const completed = loads.filter(l => l.status === 'Completed').length;
-    const revenue = loads.filter(l => l.status === 'Completed' || l.status === 'Assigned & Dispatched').reduce((acc, curr) => acc + (curr.totalFreight || 0), 0);
-    const activeVehicles = loads.filter(l => l.status === 'Assigned & Dispatched').length;
+    const revenue = loads.reduce((sum, l) => {
+      if (l.status === 'Completed' || l.status === 'Assigned & Dispatched' || l.status === 'CLOSED') {
+        const approvedBid = l.bids?.find(b => b.status === 'ACCEPTED' || b.status === 'Approved' || b.status === 'Selected');
+        return sum + (approvedBid ? approvedBid.bidAmount : (l.totalFreight || 0));
+      }
+      return sum;
+    }, 0);
+    const activeVehicles = assigned;
     return { total, open, assigned, completed, revenue, activeVehicles };
   }, [loads]);
 
