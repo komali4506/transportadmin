@@ -165,16 +165,15 @@ export default function CreateLoadPage() {
     <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6 pb-20">
       <div className="flex items-center gap-4 mb-8">
         <Button 
-          variant="outline" 
-          size="icon" 
+          type="button"
           onClick={() => navigate(-1)}
-          className="rounded-full w-10 h-10 border-gray-200 hover:bg-gray-100"
+          className="rounded-full w-10 h-10 bg-white/10 border border-white/20 hover:bg-white/20 text-white shadow-sm flex items-center justify-center transition-all duration-200"
         >
-          <ArrowLeft className="w-5 h-5 text-gray-600" />
+          <ArrowLeft className="w-5 h-5 text-white" />
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-gray-900">Create New Bid</h1>
-          <p className="text-sm text-gray-500 font-medium">Create and publish a new transportation bid with dynamic routing.</p>
+          <h1 className="text-2xl font-bold tracking-tight text-white">Create New Bid</h1>
+          <p className="text-sm text-slate-200 font-medium">Create and publish a new transportation bid with dynamic routing.</p>
         </div>
       </div>
 
@@ -183,13 +182,13 @@ export default function CreateLoadPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <Card className="border-0 shadow-lg bg-white overflow-hidden rounded-2xl">
-          <CardHeader className="bg-gray-50/50 border-b border-gray-100 pb-6">
-            <CardTitle className="text-lg font-semibold text-gray-800 flex items-center gap-2">
-              <Route className="w-5 h-5 text-green-600" />
+        <Card className="border-0 shadow-lg glass-panel bg-transparent overflow-hidden rounded-2xl">
+          <CardHeader className="bg-white/5 border-b border-white/10 pb-6">
+            <CardTitle className="text-lg font-semibold text-white flex items-center gap-2">
+              <Route className="w-5 h-5 text-green-300" />
               Route & Cargo Configuration
             </CardTitle>
-            <CardDescription>Plan your logistics route and define load parameters.</CardDescription>
+            <CardDescription className="text-slate-200">Plan your logistics route and define load parameters.</CardDescription>
           </CardHeader>
           <CardContent className="p-6 md:p-8">
             <form onSubmit={handleSubmit} className="space-y-10">
@@ -198,22 +197,22 @@ export default function CreateLoadPage() {
                 
                 {/* Left Column: Route Builder */}
                 <div className="space-y-6">
-                  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 border-b pb-2">Route Planner</h3>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Route Planner</h3>
                   
                   <div className="relative pl-8 space-y-6 py-2">
                     {/* Vertical Dashed Timeline Line */}
-                    <div className="absolute left-[11px] top-6 bottom-6 w-0.5 border-l-2 border-dashed border-gray-300"></div>
+                    <div className="absolute left-[11px] top-6 bottom-6 w-0.5 border-l-2 border-dashed border-white/20"></div>
                     
                     {/* From Location */}
                     <div className="relative z-10">
                       <div className="absolute -left-[32.5px] top-3 w-4 h-4 rounded-full bg-blue-500 border-[3px] border-white shadow-md"></div>
-                      <label className="text-xs font-bold text-gray-600 uppercase mb-1 block">From Location <span className="text-red-500">*</span></label>
+                      <label className="text-xs font-bold text-slate-200 uppercase mb-1 block">From Location <span className="text-red-500">*</span></label>
                       <Input 
                         placeholder="e.g., Hyderabad"
                         name="fromLocation"
                         value={formData.fromLocation}
                         onChange={handleChange}
-                        className={`bg-white border-gray-200 shadow-sm transition-all duration-200 ${errors.fromLocation ? 'border-red-500 focus-visible:ring-red-500' : 'focus-visible:ring-blue-500'}`}
+                        className={`glass-input text-white border-white/10 shadow-sm transition-all duration-200 ${errors.fromLocation ? 'border-red-500 focus-visible:ring-red-500' : 'focus-visible:ring-blue-500'}`}
                       />
                       {errors.fromLocation && <p className="text-xs text-red-500 mt-1 animate-in fade-in">{errors.fromLocation}</p>}
                     </div>
@@ -230,20 +229,20 @@ export default function CreateLoadPage() {
                           className="relative z-10 overflow-hidden pt-2"
                         >
                           <div className="absolute -left-[32.5px] top-5 w-4 h-4 rounded-full bg-orange-400 border-[3px] border-white shadow-md"></div>
-                          <label className="text-xs font-bold text-gray-600 uppercase mb-1 block text-orange-600">Stop {index + 1} (Midpoint)</label>
+                          <label className="text-xs font-bold text-slate-200 uppercase mb-1 block text-orange-400">Stop {index + 1} (Midpoint)</label>
                           <div className="flex gap-2 items-center">
                             <Input 
                               placeholder="e.g., Vijayawada"
                               value={stop}
                               onChange={(e) => handleStopChange(index, e.target.value)}
-                              className="bg-white border-gray-200 shadow-sm focus-visible:ring-orange-500"
+                              className="glass-input text-white border-white/10 shadow-sm focus-visible:ring-orange-500"
                             />
                             <Button 
                               type="button" 
                               variant="ghost" 
                               size="icon" 
                               onClick={() => removeStop(index)}
-                              className="text-red-400 hover:text-red-600 hover:bg-red-50 flex-shrink-0"
+                              className="text-red-400 hover:text-red-300 hover:bg-white/5 flex-shrink-0"
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -254,13 +253,13 @@ export default function CreateLoadPage() {
 
                     {/* Add Stop Button */}
                     <div className="relative z-10 pt-2">
-                      <div className="absolute -left-[30px] top-3 w-3 h-3 rounded-full bg-gray-200 border-2 border-white"></div>
+                      <div className="absolute -left-[30px] top-3 w-3 h-3 rounded-full bg-slate-800 border-2 border-white/20"></div>
                       <Button 
                         type="button" 
                         variant="outline" 
                         size="sm" 
                         onClick={addStop}
-                        className="text-xs font-bold text-green-700 border-green-600/20 hover:bg-green-50/50 border-dashed"
+                        className="text-xs font-bold text-green-400 border-green-500/20 hover:bg-white/5 border-dashed"
                       >
                         <Plus className="w-3 h-3 mr-1" /> Add Route Stop
                       </Button>
@@ -269,28 +268,28 @@ export default function CreateLoadPage() {
                     {/* To Location */}
                     <div className="relative z-10 pt-2">
                       <div className="absolute -left-[32.5px] top-5 w-4 h-4 rounded-full bg-green-500 border-[3px] border-white shadow-md"></div>
-                      <label className="text-xs font-bold text-gray-600 uppercase mb-1 block">To Location <span className="text-red-500">*</span></label>
+                      <label className="text-xs font-bold text-slate-200 uppercase mb-1 block">To Location <span className="text-red-500">*</span></label>
                       <Input 
                         placeholder="e.g., Chennai"
                         name="toLocation"
                         value={formData.toLocation}
                         onChange={handleChange}
-                        className={`bg-white border-gray-200 shadow-sm transition-all duration-200 ${errors.toLocation ? 'border-red-500 focus-visible:ring-red-500' : 'focus-visible:ring-green-500'}`}
+                        className={`glass-input text-white border-white/10 shadow-sm transition-all duration-200 ${errors.toLocation ? 'border-red-500 focus-visible:ring-red-500' : 'focus-visible:ring-green-500'}`}
                       />
                       {errors.toLocation && <p className="text-xs text-red-500 mt-1 animate-in fade-in">{errors.toLocation}</p>}
                     </div>
                   </div>
 
                   {/* Live Route Summary Preview */}
-                  <div className="mt-6 p-4 bg-gray-50/80 rounded-xl border border-gray-100">
-                    <p className="text-xs font-bold text-gray-500 uppercase mb-3">Live Route Preview</p>
-                    <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-gray-700">
+                  <div className="mt-6 p-4 bg-white/5 rounded-xl border border-white/10">
+                    <p className="text-xs font-bold text-slate-200 uppercase mb-3">Live Route Preview</p>
+                    <div className="flex flex-wrap items-center gap-2 text-sm font-bold text-white">
                       {routeArray.map((loc, idx) => (
                         <React.Fragment key={idx}>
-                          <span className={idx === 0 ? 'text-blue-600' : idx === routeArray.length - 1 ? 'text-green-600' : 'text-orange-600'}>
+                          <span className={idx === 0 ? 'text-blue-300' : idx === routeArray.length - 1 ? 'text-green-300' : 'text-orange-300'}>
                             {loc}
                           </span>
-                          {idx < routeArray.length - 1 && <ArrowRight className="w-3 h-3 text-gray-400" />}
+                          {idx < routeArray.length - 1 && <ArrowRight className="w-3 h-3 text-slate-300" />}
                         </React.Fragment>
                       ))}
                     </div>
@@ -300,24 +299,24 @@ export default function CreateLoadPage() {
 
                 {/* Right Column: Cargo Details */}
                 <div className="space-y-6">
-                  <h3 className="text-sm font-bold text-gray-800 uppercase tracking-wider mb-4 border-b pb-2">Cargo & Pricing Details</h3>
+                  <h3 className="text-sm font-bold text-white uppercase tracking-wider mb-4 border-b border-white/10 pb-2">Cargo & Pricing Details</h3>
                   
                   <div className="space-y-5">
                     {/* Reference ID */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-600 uppercase">Bid ID</label>
+                      <label className="text-xs font-bold text-slate-200 uppercase">Bid ID</label>
                       <Input 
                         name="bidId"
                         value={formData.bidId}
                         disabled
-                        className="bg-gray-50 font-mono text-gray-500 border-gray-200 shadow-none"
+                        className="glass-input font-mono text-slate-300 border-white/10 shadow-none"
                       />
                     </div>
 
                     {/* Dispatch Date */}
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
-                        <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                      <label className="text-xs font-bold text-slate-200 uppercase flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-slate-300" />
                         Dispatch Date <span className="text-red-500">*</span>
                       </label>
                       <Input 
@@ -325,7 +324,7 @@ export default function CreateLoadPage() {
                         name="dispatchDate"
                         value={formData.dispatchDate}
                         onChange={handleChange}
-                        className={`bg-white border-gray-200 shadow-sm ${errors.dispatchDate ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
+                        className={`glass-input text-white border-white/10 shadow-sm ${errors.dispatchDate ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
                       />
                       {errors.dispatchDate && <p className="text-xs text-red-500 animate-in fade-in">{errors.dispatchDate}</p>}
                     </div>
@@ -333,8 +332,8 @@ export default function CreateLoadPage() {
                     <div className="grid grid-cols-2 gap-4">
                       {/* Bid End Date */}
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
-                          <Calendar className="w-3.5 h-3.5 text-gray-400" />
+                        <label className="text-xs font-bold text-slate-200 uppercase flex items-center gap-1.5">
+                          <Calendar className="w-3.5 h-3.5 text-slate-300" />
                           Bid End Date <span className="text-red-500">*</span>
                         </label>
                         <Input 
@@ -342,15 +341,15 @@ export default function CreateLoadPage() {
                           name="endDate"
                           value={formData.endDate}
                           onChange={handleChange}
-                          className={`bg-white border-gray-200 shadow-sm ${errors.endDate ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
+                          className={`glass-input text-white border-white/10 shadow-sm ${errors.endDate ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
                         />
                         {errors.endDate && <p className="text-xs text-red-500 animate-in fade-in">{errors.endDate}</p>}
                       </div>
 
                       {/* Bid End Time */}
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
-                          <Clock className="w-3.5 h-3.5 text-gray-400" />
+                        <label className="text-xs font-bold text-slate-200 uppercase flex items-center gap-1.5">
+                          <Clock className="w-3.5 h-3.5 text-slate-300" />
                           Bid End Time <span className="text-red-500">*</span>
                         </label>
                         <Input 
@@ -358,7 +357,7 @@ export default function CreateLoadPage() {
                           name="endTime"
                           value={formData.endTime}
                           onChange={handleChange}
-                          className={`bg-white border-gray-200 shadow-sm ${errors.endTime ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
+                          className={`glass-input text-white border-white/10 shadow-sm ${errors.endTime ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
                         />
                         {errors.endTime && <p className="text-xs text-red-500 animate-in fade-in">{errors.endTime}</p>}
                       </div>
@@ -367,8 +366,8 @@ export default function CreateLoadPage() {
                     <div className="grid grid-cols-2 gap-4">
                       {/* Number of Tonnes */}
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
-                          <Weight className="w-3.5 h-3.5 text-gray-400" />
+                        <label className="text-xs font-bold text-slate-200 uppercase flex items-center gap-1.5">
+                          <Weight className="w-3.5 h-3.5 text-slate-300" />
                           Tonnes <span className="text-red-500">*</span>
                         </label>
                         <Input 
@@ -379,15 +378,15 @@ export default function CreateLoadPage() {
                           onChange={handleChange}
                           min="0"
                           step="0.01"
-                          className={`bg-white border-gray-200 shadow-sm ${errors.tonnes ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
+                          className={`glass-input text-white border-white/10 shadow-sm ${errors.tonnes ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
                         />
                         {errors.tonnes && <p className="text-xs text-red-500 animate-in fade-in">{errors.tonnes}</p>}
                       </div>
 
                       {/* Cost Per Tonne */}
                       <div className="space-y-1.5">
-                        <label className="text-xs font-bold text-gray-600 uppercase flex items-center gap-1.5">
-                          <CircleDollarSign className="w-3.5 h-3.5 text-gray-400" />
+                        <label className="text-xs font-bold text-slate-200 uppercase flex items-center gap-1.5">
+                          <CircleDollarSign className="w-3.5 h-3.5 text-slate-300" />
                           Rate / Tonne <span className="text-red-500">*</span>
                         </label>
                         <Input 
@@ -398,19 +397,19 @@ export default function CreateLoadPage() {
                           onChange={handleChange}
                           min="0"
                           step="0.01"
-                          className={`bg-white border-gray-200 shadow-sm ${errors.costPerTonne ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
+                          className={`glass-input text-white border-white/10 shadow-sm ${errors.costPerTonne ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
                         />
                         {errors.costPerTonne && <p className="text-xs text-red-500 animate-in fade-in">{errors.costPerTonne}</p>}
                       </div>
                     </div>
 
                     {/* Total Freight Value Highlight */}
-                    <div className="bg-green-50 border border-green-100 rounded-xl p-6 relative overflow-hidden group hover:border-green-300 transition-colors">
+                    <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-6 relative overflow-hidden group hover:border-green-500/50 transition-colors">
                       <div className="relative z-10">
-                        <h3 className="text-sm font-bold text-green-800 uppercase">Estimated Value</h3>
-                        <p className="text-xs text-green-600/80 mt-0.5 font-medium">Calculated: Tonnes × Rate / Tonne</p>
+                        <h3 className="text-sm font-bold text-green-300 uppercase">Estimated Value</h3>
+                        <p className="text-xs text-slate-200 mt-0.5 font-medium">Calculated: Tonnes × Rate / Tonne</p>
                       </div>
-                      <div className="text-3xl font-bold text-green-700 font-mono tracking-tight mt-2">
+                      <div className="text-3xl font-bold text-green-300 font-mono tracking-tight mt-2">
                         ₹ {totalFreight.toLocaleString('en-IN', { maximumFractionDigits: 2 })}
                       </div>
                     </div>
@@ -420,7 +419,7 @@ export default function CreateLoadPage() {
               </div>
 
               {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-gray-100 mt-10">
+              <div className="flex flex-col sm:flex-row gap-4 pt-6 border-t border-white/10 mt-10">
                 <Button 
                   type="submit" 
                   disabled={isLoading}
@@ -440,10 +439,9 @@ export default function CreateLoadPage() {
                 </Button>
                 <Button 
                   type="button" 
-                  variant="outline" 
                   onClick={handleReset}
                   disabled={isLoading}
-                  className="w-full sm:w-auto font-bold uppercase tracking-wider px-8 py-6 h-auto border-gray-200 hover:bg-gray-50 text-gray-600 transition-all active:scale-95"
+                  className="w-full sm:w-auto bg-white/10 border border-white/20 hover:bg-white/20 text-white font-bold uppercase tracking-wider px-8 py-6 h-auto transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
                   <RotateCcw className="w-5 h-5 mr-2" />
                   Reset Form

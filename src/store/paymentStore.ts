@@ -18,13 +18,18 @@ export interface PaymentEntry {
   rcUrl?: string;
   insuranceUrl?: string;
   paymentMethod: 'Bank Transfer' | 'UPI' | 'RTGS' | 'NEFT';
+  paymentDocumentUrl?: string;
+  rating?: number;
+  coins?: number;
+  transporterRole?: string;
 }
 
 interface PaymentState {
   payments: PaymentEntry[];
   isLoading: boolean;
   fetchInvoicesFromBackend: () => Promise<void>;
-  settlePaymentOnBackend: (tripId: string, paymentMethod: 'Bank Transfer' | 'UPI' | 'RTGS' | 'NEFT', extraCharges: number) => Promise<void>;
+  settlePaymentOnBackend: (tripId: string, paymentFile?: File | null, paymentMethod?: 'Bank Transfer' | 'UPI' | 'RTGS' | 'NEFT', extraCharges?: number) => Promise<void>;
+  ratePaymentOnBackend: (tripId: string, rating: number) => Promise<void>;
   
   // Legacy / Local fallback compatibility methods
   addPayment: (payment: Omit<PaymentEntry, 'paymentId' | 'invoiceId' | 'createdAt'>) => void;
@@ -53,6 +58,7 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
           paymentId: t.id,
           loadId: t.load_id,
           transporter: transporterName,
+          transporterRole: t.assigned_user?.role || 'Transporter',
           amount: freight,
           penalty: 0,
           tax,
@@ -66,6 +72,9 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
           rcUrl: t.rc_url ? `${apiClient.getApiUrl()}${t.rc_url}` : undefined,
           insuranceUrl: t.insurance_url ? `${apiClient.getApiUrl()}${t.insurance_url}` : undefined,
           paymentMethod: (t.payment_method || 'Bank Transfer') as any,
+          paymentDocumentUrl: t.payment_document_url ? `${apiClient.getApiUrl()}${t.payment_document_url}` : undefined,
+          rating: t.rating || undefined,
+          coins: t.coins || 0,
         };
       });
       set({ payments: mapped, isLoading: false });
@@ -75,12 +84,22 @@ export const usePaymentStore = create<PaymentState>((set, get) => ({
     }
   },
 
-  settlePaymentOnBackend: async (tripId, paymentMethod, extraCharges) => {
+  settlePaymentOnBackend: async (tripId, paymentFile, paymentMethod, extraCharges) => {
     try {
-      await apiClient.payTripInvoice(tripId, { paymentMethod, extraCharges });
+      await apiClient.payTripInvoice(tripId, { paymentMethod, extraCharges, paymentFile });
       await get().fetchInvoicesFromBackend();
     } catch (err) {
       console.error("Failed to settle payment on backend:", err);
+      throw err;
+    }
+  },
+
+  ratePaymentOnBackend: async (tripId, rating) => {
+    try {
+      await apiClient.rateTripInvoice(tripId, rating);
+      await get().fetchInvoicesFromBackend();
+    } catch (err) {
+      console.error("Failed to rate payment on backend:", err);
       throw err;
     }
   },

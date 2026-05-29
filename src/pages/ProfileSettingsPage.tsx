@@ -27,7 +27,7 @@ export const ProfileSettingsPage: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Active Tab State
-  const [activeTab, setActiveTab] = useState<'personal' | 'photo' | 'security' | 'notifications'>('personal');
+  const [activeTab, setActiveTab] = useState<'personal' | 'photo' | 'security'>('personal');
 
   // Personal Info Form State
   const [fullName, setFullName] = useState('');
@@ -230,22 +230,10 @@ export const ProfileSettingsPage: React.FC = () => {
     }, 800);
   };
 
-  const handleNotificationSave = () => {
-    setIsSaving(true);
-    setTimeout(() => {
-      setIsSaving(false);
-      toast({
-        title: "Preferences Saved",
-        description: "ERP notification matrix updated successfully.",
-      });
-    }, 600);
-  };
-
   const tabs = [
     { id: 'personal', name: 'Personal Information', icon: User },
     { id: 'photo', name: 'Profile Photo', icon: Camera },
-    { id: 'security', name: 'Security Settings', icon: Shield },
-    { id: 'notifications', name: 'Notification Preferences', icon: Bell }
+    { id: 'security', name: 'Security Settings', icon: Shield }
   ] as const;
 
   return (
@@ -603,171 +591,7 @@ export const ProfileSettingsPage: React.FC = () => {
             </div>
           )}
 
-          {/* NOTIFICATION PREFERENCES TAB */}
-          {activeTab === 'notifications' && (
-            <div className="p-6 md:p-8 space-y-6">
-              <div className="border-b border-gray-100 pb-4">
-                <h3 className="text-base font-bold text-gray-900">Notification Preferences</h3>
-                <p className="text-xs text-gray-500 mt-1">Configure when and how you receive status updates regarding logistics actions.</p>
-              </div>
 
-              <div className="space-y-6">
-                <div className="overflow-x-auto">
-                  <table className="w-full text-left border-collapse">
-                    <thead>
-                      <tr className="border-b border-gray-100">
-                        <th className="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider">Logistics Trigger</th>
-                        <th className="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Email</th>
-                        <th className="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">Push App</th>
-                        <th className="py-3 text-xs font-bold text-gray-400 uppercase tracking-wider text-center">SMS Alert</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                      {/* Row 1 */}
-                      <tr>
-                        <td className="py-4">
-                          <p className="text-sm font-bold text-gray-800">New Bid Publishing</p>
-                          <p className="text-xs text-gray-400">Triggered whenever a dispatcher publishes a new freight load request.</p>
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={emailNotify.loads} 
-                            onChange={(e) => setEmailNotify(prev => ({ ...prev, loads: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={pushNotify.loads}
-                            onChange={(e) => setPushNotify(prev => ({ ...prev, loads: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={smsNotify.loads}
-                            onChange={(e) => setSmsNotify(prev => ({ ...prev, loads: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                      </tr>
-
-                      {/* Row 2 */}
-                      <tr>
-                        <td className="py-4">
-                          <p className="text-sm font-bold text-gray-800">Payments & Escrow Settled</p>
-                          <p className="text-xs text-gray-400">Updates regarding escrow transfers, payments processed, and hold releases.</p>
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={emailNotify.payments}
-                            onChange={(e) => setEmailNotify(prev => ({ ...prev, payments: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={pushNotify.payments}
-                            onChange={(e) => setPushNotify(prev => ({ ...prev, payments: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={smsNotify.payments}
-                            onChange={(e) => setSmsNotify(prev => ({ ...prev, payments: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                      </tr>
-
-                      {/* Row 3 */}
-                      <tr>
-                        <td className="py-4">
-                          <p className="text-sm font-bold text-gray-800">Transporter Verifications</p>
-                          <p className="text-xs text-gray-400">Alerts when new transporters upload compliance documents for approval.</p>
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={emailNotify.transporters}
-                            onChange={(e) => setEmailNotify(prev => ({ ...prev, transporters: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={pushNotify.transporters}
-                            onChange={(e) => setPushNotify(prev => ({ ...prev, transporters: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={smsNotify.transporters}
-                            onChange={(e) => setSmsNotify(prev => ({ ...prev, transporters: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                      </tr>
-
-                      {/* Row 4 */}
-                      <tr>
-                        <td className="py-4">
-                          <p className="text-sm font-bold text-gray-800">System Security Alerts</p>
-                          <p className="text-xs text-gray-400">Logs regarding unauthorized IP accesses, session threats, and key modifications.</p>
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={emailNotify.systemAlerts}
-                            onChange={(e) => setEmailNotify(prev => ({ ...prev, systemAlerts: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={pushNotify.systemAlerts}
-                            onChange={(e) => setPushNotify(prev => ({ ...prev, systemAlerts: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                        <td className="py-4 text-center">
-                          <input 
-                            type="checkbox" 
-                            checked={smsNotify.systemAlerts}
-                            onChange={(e) => setSmsNotify(prev => ({ ...prev, systemAlerts: e.target.checked }))}
-                            className="rounded border-gray-300 text-emerald-700 focus:ring-emerald-700 h-4 w-4"
-                          />
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="flex justify-end pt-4 border-t border-gray-100">
-                  <button
-                    type="button"
-                    onClick={handleNotificationSave}
-                    disabled={isSaving}
-                    className="px-5 py-2.5 rounded-xl bg-emerald-800 hover:bg-emerald-700 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 flex items-center gap-2 transition-colors"
-                  >
-                    {isSaving && <Loader2 size={16} className="animate-spin" />}
-                    Save Preferences
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
 
         </div>
       </div>

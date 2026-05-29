@@ -5,7 +5,7 @@
  * Includes automatic failover to local storage and mock data if ngrok is offline.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://app-transportbiofactor.azurewebsites.net';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://anabella-furuncular-tammi.ngrok-free.dev';
 
 // Custom headers to bypass ngrok landing/warning page & support JSON payloads
 const getHeaders = () => {
@@ -150,7 +150,7 @@ export const apiClient = {
         bidAmount: Number(b.bid_amount || 0),
         pricePerTonne: Number(b.price_per_tonne || b.bid_amount / (b.tonnes || 1)),
         eta: b.eta || '24 hrs',
-        driverRating: Number(b.driver_rating || 4.5),
+        driverRating: Number(b.user?.average_rating || b.driver_rating || 4.5),
         experienceYears: Number(b.experience_years || 5),
         verificationStatus: b.verification_status || ['KYC Verified', 'Trusted Transporter'],
         status: b.status || 'Pending',
@@ -165,7 +165,7 @@ export const apiClient = {
           completedTrips: Number(b.completed_trips || 100),
           insuranceValidity: b.insurance_validity || 'Valid',
           kycStatus: b.kyc_status || 'Verified',
-          rating: Number(b.rating || 4.5),
+          rating: Number(b.user?.average_rating || b.rating || 4.5),
           experienceYears: Number(b.experience_years || 5),
           role: realRole
         }
@@ -247,6 +247,9 @@ export const apiClient = {
     }
     return response.json();
   },
+
+
+
 
   /**
    * Updates vehicle details for a trip by load ID (POST /api/trips/load/{load_id}/vehicle)
@@ -471,19 +474,46 @@ export const apiClient = {
   /**
    * Settle and pay a submitted invoice (POST /api/trips/admin/invoice/{trip_id}/pay)
    */
-  payTripInvoice: async (tripId: string, payload: { paymentMethod: string; extraCharges: number }): Promise<any> => {
-    const snakePayload = {
-      payment_method: payload.paymentMethod,
-      extra_charges: payload.extraCharges
-    };
+  payTripInvoice: async (
+    tripId: string, 
+    payload: { paymentMethod?: string; extraCharges?: number; paymentFile?: File | null }
+  ): Promise<any> => {
+    const formData = new FormData();
+    if (payload.paymentMethod) {
+      formData.append('payment_method', payload.paymentMethod);
+    }
+    if (payload.extraCharges !== undefined) {
+      formData.append('extra_charges', String(payload.extraCharges));
+    }
+    if (payload.paymentFile) {
+      formData.append('payment_file', payload.paymentFile);
+    }
 
     const response = await fetch(`${API_BASE_URL}/api/trips/admin/invoice/${tripId}/pay`, {
       method: 'POST',
-      headers: getHeaders(),
-      body: JSON.stringify(snakePayload),
+      headers: {
+        'ngrok-skip-browser-warning': 'true',
+        // Do not set Content-Type; browser will set multipart boundary
+      },
+      body: formData,
     });
     if (!response.ok) {
       throw new Error(`Failed to settle payment for trip: ${response.statusText}`);
+    }
+    return response.json();
+  },
+
+  /**
+   * Rates a completed trip invoice and awards coins to the transporter (POST /api/trips/admin/invoice/{trip_id}/rate)
+   */
+  rateTripInvoice: async (tripId: string, rating: number): Promise<any> => {
+    const response = await fetch(`${API_BASE_URL}/api/trips/admin/invoice/${tripId}/rate`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ rating }),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to rate trip: ${response.statusText}`);
     }
     return response.json();
   },

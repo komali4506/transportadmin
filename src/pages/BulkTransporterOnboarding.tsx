@@ -195,36 +195,36 @@ export default function BulkTransporterOnboarding() {
   }, [onboardingQueue, activeFilter, searchQuery]);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 font-sans text-white">
       
       {/* Title */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight flex items-center gap-2.5">
-            <UserCheck className="text-emerald-600" />
+          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+            <UserCheck className="text-emerald-300" />
             Bulk User Registration
           </h1>
-          <p className="text-sm text-gray-500 mt-1">Upload an Excel spreadsheet to automatically register Drivers and Transporters to the live system database.</p>
+          <p className="text-sm text-slate-200 mt-1">Upload an Excel spreadsheet to automatically register Drivers and Transporters to the live system database.</p>
         </div>
       </div>
 
       {/* Top KPI Cards Row */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="border-0 shadow-xs p-4 bg-slate-900 text-white relative overflow-hidden rounded-xl">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Users Extracted</p>
-          <h3 className="text-2xl font-extrabold font-mono text-emerald-400 mt-1">{stats.total}</h3>
+        <Card className="border-0 shadow-xs p-4 glass-card text-white relative overflow-hidden rounded-xl">
+          <p className="text-[10px] font-bold text-slate-200 uppercase tracking-widest">Total Users Extracted</p>
+          <h3 className="text-2xl font-extrabold font-mono text-emerald-300 mt-1">{stats.total}</h3>
         </Card>
-        <Card className="border-0 shadow-xs p-4 bg-white border-l-4 border-blue-500 rounded-xl">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Transporters Found</p>
-          <h3 className="text-2xl font-extrabold font-mono text-blue-600 mt-1">{stats.transporters}</h3>
+        <Card className="border-0 shadow-xs p-4 glass-card border-l-4 border-blue-500 text-white rounded-xl">
+          <p className="text-[10px] font-bold text-slate-200 uppercase tracking-widest">Transporters Found</p>
+          <h3 className="text-2xl font-extrabold font-mono text-blue-300 mt-1">{stats.transporters}</h3>
         </Card>
-        <Card className="border-0 shadow-xs p-4 bg-white border-l-4 border-indigo-500 rounded-xl">
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Drivers Found</p>
-          <h3 className="text-2xl font-extrabold font-mono text-indigo-600 mt-1">{stats.drivers}</h3>
+        <Card className="border-0 shadow-xs p-4 glass-card border-l-4 border-indigo-500 text-white rounded-xl">
+          <p className="text-[10px] font-bold text-slate-200 uppercase tracking-widest">Drivers Found</p>
+          <h3 className="text-2xl font-extrabold font-mono text-indigo-300 mt-1">{stats.drivers}</h3>
         </Card>
-        <Card className={`border-0 shadow-xs p-4 bg-white border-l-4 rounded-xl ${stats.invalid > 0 ? 'border-rose-500' : 'border-emerald-500'}`}>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Missing / Invalid Fields</p>
-          <h3 className={`text-2xl font-extrabold font-mono mt-1 ${stats.invalid > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>{stats.invalid}</h3>
+        <Card className={`border-0 shadow-xs p-4 glass-card border-l-4 rounded-xl text-white ${stats.invalid > 0 ? 'border-rose-500' : 'border-emerald-500'}`}>
+          <p className="text-[10px] font-bold text-slate-200 uppercase tracking-widest">Missing / Invalid Fields</p>
+          <h3 className={`text-2xl font-extrabold font-mono mt-1 ${stats.invalid > 0 ? 'text-rose-300' : 'text-emerald-300'}`}>{stats.invalid}</h3>
         </Card>
       </div>
 
@@ -233,12 +233,12 @@ export default function BulkTransporterOnboarding() {
         
         {/* Left Side: Upload Column */}
         <div className="xl:col-span-1 space-y-6">
-          <Card className="border-0 shadow-sm bg-white overflow-hidden rounded-xl">
-            <CardHeader className="bg-slate-950 text-white p-5">
-              <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                <FileSpreadsheet size={16} className="text-emerald-400" /> Excel Spreadsheet
+          <Card className="border-0 shadow-sm glass-panel bg-transparent overflow-hidden rounded-xl">
+            <CardHeader className="bg-white/5 border-b border-white/10 text-white p-5">
+              <CardTitle className="text-sm font-bold uppercase tracking-wider text-slate-200 flex items-center gap-2">
+                <FileSpreadsheet size={16} className="text-emerald-300" /> Excel Spreadsheet
               </CardTitle>
-              <CardDescription className="text-xs text-slate-400">Excel spreadsheets (.xlsx, .xls) containing user registration records.</CardDescription>
+              <CardDescription className="text-xs text-slate-200">Excel spreadsheets (.xlsx, .xls) containing user registration records.</CardDescription>
             </CardHeader>
             <CardContent className="p-5 space-y-4">
               <div 
@@ -247,7 +247,7 @@ export default function BulkTransporterOnboarding() {
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
                 className={`border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center space-y-4 ${
-                  isDragOver ? 'border-emerald-500 bg-emerald-50/30' : 'border-gray-200 hover:border-emerald-400 bg-slate-50/40'
+                  isDragOver ? 'border-emerald-500 bg-emerald-500/20' : 'border-white/10 hover:border-emerald-400 bg-white/5 text-white'
                 }`}
               >
                 <input 
@@ -258,37 +258,37 @@ export default function BulkTransporterOnboarding() {
                   className="hidden" 
                 />
                 
-                <div className="p-3 bg-emerald-50 border border-emerald-100 text-emerald-600 rounded-xl shadow-sm">
+                <div className="p-3 bg-emerald-500/20 border border-emerald-500/30 text-emerald-300 rounded-xl shadow-sm">
                   {isParsing ? (
-                    <RefreshCw size={24} className="text-emerald-500 animate-spin" />
+                    <RefreshCw size={24} className="text-emerald-300 animate-spin" />
                   ) : (
-                    <Upload size={24} className="text-emerald-500 animate-pulse" />
+                    <Upload size={24} className="text-emerald-300 animate-pulse" />
                   )}
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-slate-800">
+                  <p className="text-xs font-bold text-white">
                     {isParsing ? "Extracting user details..." : "Drag & Drop spreadsheet here"}
                   </p>
-                  <p className="text-[10px] text-slate-400 mt-1">Supports Excel spreadsheets (.xlsx, .xls)</p>
+                  <p className="text-[10px] text-slate-200 mt-1">Supports Excel spreadsheets (.xlsx, .xls)</p>
                 </div>
               </div>
 
               {/* Sample Excel Instruction Box */}
-              <div className="bg-slate-50 border border-slate-100 rounded-xl p-3.5 space-y-2.5">
-                <h4 className="text-[11px] font-bold text-slate-700 flex items-center gap-1.5">
-                  <AlertCircle size={13} className="text-emerald-600" /> Recommended Columns
+              <div className="bg-white/5 border border-white/10 rounded-xl p-3.5 space-y-2.5 text-white">
+                <h4 className="text-[11px] font-bold text-white flex items-center gap-1.5">
+                  <AlertCircle size={13} className="text-emerald-300" /> Recommended Columns
                 </h4>
-                <p className="text-[10px] text-slate-500 leading-relaxed">
+                <p className="text-[10px] text-slate-200 leading-relaxed">
                   Your Excel sheet headers can be dynamic. The parser intelligently reads the following columns:
                 </p>
-                <div className="grid grid-cols-2 gap-1 text-[9px] font-medium text-slate-600">
-                  <div className="bg-white px-2 py-1 border rounded flex items-center gap-1">✓ name</div>
-                  <div className="bg-white px-2 py-1 border rounded flex items-center gap-1">✓ mobile number</div>
-                  <div className="bg-white px-2 py-1 border rounded flex items-center gap-1">✓ role <span className="text-[8px] text-slate-400">(Driver/Transporter)</span></div>
-                  <div className="bg-white px-2 py-1 border rounded flex items-center gap-1">✓ email</div>
-                  <div className="bg-white px-2 py-1 border rounded flex items-center gap-1">✓ password</div>
-                  <div className="bg-white px-2 py-1 border rounded flex items-center gap-1">✓ city / state</div>
-                  <div className="bg-white px-2 py-1 border rounded flex items-center gap-1 col-span-2">✓ whatsapp number</div>
+                <div className="grid grid-cols-2 gap-1 text-[9px] font-medium text-slate-200">
+                  <div className="bg-white/5 px-2 py-1 border border-white/10 rounded flex items-center gap-1">✓ name</div>
+                  <div className="bg-white/5 px-2 py-1 border border-white/10 rounded flex items-center gap-1">✓ mobile number</div>
+                  <div className="bg-white/5 px-2 py-1 border border-white/10 rounded flex items-center gap-1">✓ role <span className="text-[8px] text-slate-400">(Driver/Transporter)</span></div>
+                  <div className="bg-white/5 px-2 py-1 border border-white/10 rounded flex items-center gap-1">✓ email</div>
+                  <div className="bg-white/5 px-2 py-1 border border-white/10 rounded flex items-center gap-1">✓ password</div>
+                  <div className="bg-white/5 px-2 py-1 border border-white/10 rounded flex items-center gap-1">✓ city / state</div>
+                  <div className="bg-white/5 px-2 py-1 border border-white/10 rounded flex items-center gap-1 col-span-2">✓ whatsapp number</div>
                 </div>
               </div>
             </CardContent>
@@ -297,17 +297,17 @@ export default function BulkTransporterOnboarding() {
 
         {/* Right Side: Preview & Registration Grid */}
         <div className="xl:col-span-2 space-y-6">
-          <Card className="border-0 shadow-sm bg-white overflow-hidden rounded-xl">
+          <Card className="border-0 shadow-sm glass-panel bg-transparent overflow-hidden rounded-xl">
             
             {/* Table Header Controls */}
-            <CardHeader className="border-b border-slate-100 p-5">
+            <CardHeader className="border-b border-white/10 p-5 bg-white/5">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div>
-                  <CardTitle className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                    <FileSpreadsheet size={16} className="text-emerald-500" />
+                  <CardTitle className="text-sm font-bold text-white flex items-center gap-2">
+                    <FileSpreadsheet size={16} className="text-emerald-300" />
                     Extracted User Registry List
                   </CardTitle>
-                  <CardDescription className="text-xs text-slate-400">Review parsed rows, verify credentials, and commit them to the live database.</CardDescription>
+                  <CardDescription className="text-xs text-slate-200">Review parsed rows, verify credentials, and commit them to the live database.</CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button 
@@ -335,18 +335,18 @@ export default function BulkTransporterOnboarding() {
                 
                 {/* Search Bar */}
                 <div className="relative w-full md:w-72">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" />
                   <Input 
                     type="text"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Search by Name, Email, Role, City..."
-                    className="pl-9 h-8 bg-slate-50 border-slate-200 text-xs w-full focus:bg-white rounded-lg"
+                    className="pl-9 h-8 glass-input text-white text-xs w-full focus:bg-transparent rounded-lg"
                   />
                 </div>
 
                 {/* Queue Filter Tabs */}
-                <div className="flex bg-slate-100 p-0.5 rounded-lg border border-slate-200 gap-0.5 overflow-x-auto self-start md:self-auto">
+                <div className="flex bg-white/5 p-0.5 rounded-lg border border-white/10 gap-0.5 overflow-x-auto self-start md:self-auto">
                   {[
                     { id: 'ALL', label: `All Users (${stats.total})` },
                     { id: 'AI_VERIFIED', label: `Ready to Onboard (${stats.ready})` },
@@ -354,11 +354,12 @@ export default function BulkTransporterOnboarding() {
                   ].map(tab => (
                     <button
                       key={tab.id}
+                      type="button"
                       onClick={() => setActiveFilter(tab.id as any)}
                       className={`px-2.5 py-1 text-[10px] font-bold rounded-md whitespace-nowrap transition-all ${
                         activeFilter === tab.id 
-                          ? 'bg-white text-slate-800 shadow-xs border border-slate-200/50' 
-                          : 'text-slate-500 hover:text-slate-700 hover:bg-slate-200/50'
+                          ? 'bg-white/20 text-white shadow-xs border border-white/10' 
+                          : 'text-slate-200 hover:text-white'
                       }`}
                     >
                       {tab.label}
@@ -373,21 +374,21 @@ export default function BulkTransporterOnboarding() {
             <CardContent className="p-0">
               {filteredQueue.length === 0 ? (
                 <div className="text-center py-20 space-y-3">
-                  <FileText size={44} className="text-slate-200 mx-auto" />
-                  <p className="text-sm text-slate-400 italic font-medium">No registrations matching the selected filters.</p>
-                  <p className="text-xs text-slate-400/70">Drag & drop your Excel file on the left to review records here.</p>
+                  <FileText size={44} className="text-slate-400 mx-auto" />
+                  <p className="text-sm text-slate-200 italic font-medium">No registrations matching the selected filters.</p>
+                  <p className="text-xs text-slate-300/70">Drag & drop your Excel file on the left to review records here.</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <Table>
-                    <TableHeader className="bg-slate-50/50">
-                      <TableRow>
-                        <TableHead className="font-bold text-gray-500 uppercase text-[9px] pl-5 py-3">Name & Role</TableHead>
-                        <TableHead className="font-bold text-gray-500 uppercase text-[9px]">Contact Info</TableHead>
-                        <TableHead className="font-bold text-gray-500 uppercase text-[9px]">Location</TableHead>
-                        <TableHead className="font-bold text-gray-500 uppercase text-[9px]">Credentials</TableHead>
-                        <TableHead className="font-bold text-gray-500 uppercase text-[9px]">Status</TableHead>
-                        <TableHead className="font-bold text-gray-500 uppercase text-[9px] text-right pr-5">Actions</TableHead>
+                    <TableHeader className="bg-white/5">
+                      <TableRow className="border-b border-white/10 hover:bg-transparent">
+                        <TableHead className="font-bold text-slate-200 uppercase text-[9px] pl-5 py-3">Name & Role</TableHead>
+                        <TableHead className="font-bold text-slate-200 uppercase text-[9px]">Contact Info</TableHead>
+                        <TableHead className="font-bold text-slate-200 uppercase text-[9px]">Location</TableHead>
+                        <TableHead className="font-bold text-slate-200 uppercase text-[9px]">Credentials</TableHead>
+                        <TableHead className="font-bold text-slate-200 uppercase text-[9px]">Status</TableHead>
+                        <TableHead className="font-bold text-slate-200 uppercase text-[9px] text-right pr-5">Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
@@ -401,14 +402,14 @@ export default function BulkTransporterOnboarding() {
                               initial={{ opacity: 0, y: 5 }}
                               animate={{ opacity: 1, y: 0 }}
                               exit={{ opacity: 0, x: -50 }}
-                              className="hover:bg-slate-50/50 transition-all border-b"
+                              className="hover:bg-white/5 transition-all border-b border-white/5"
                             >
                               
                               {/* User Name & Role */}
                               <TableCell className="pl-5 py-3.5">
                                 <div className="space-y-1">
-                                  <p className="text-xs font-bold text-slate-800">{item.data.name}</p>
-                                  <Badge className={`${item.data.role === 'Driver' ? 'bg-blue-50 text-blue-700 border-blue-200/50' : 'bg-indigo-50 text-indigo-700 border-indigo-200/50'} border font-bold text-[9px] px-1.5 py-0.5 rounded`}>
+                                  <p className="text-xs font-bold text-white">{item.data.name}</p>
+                                  <Badge className={`${item.data.role === 'Driver' ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' : 'bg-indigo-500/20 text-indigo-300 border-indigo-500/30'} border font-bold text-[9px] px-1.5 py-0.5 rounded`}>
                                     {item.data.role}
                                   </Badge>
                                 </div>
@@ -417,11 +418,11 @@ export default function BulkTransporterOnboarding() {
                               {/* Contact Info */}
                               <TableCell>
                                 <div className="space-y-0.5 text-[10px]">
-                                  <p className="text-slate-700 font-medium">Mob: <span className="font-bold">{item.data.mobile || '—'}</span></p>
-                                  {item.data.email && <p className="text-slate-500">Mail: {item.data.email}</p>}
+                                  <p className="text-white font-medium">Mob: <span className="font-bold">{item.data.mobile || '—'}</span></p>
+                                  {item.data.email && <p className="text-slate-200">Mail: {item.data.email}</p>}
                                   {item.data.whatsapp && (
-                                    <p className="text-emerald-600 font-semibold flex items-center gap-1 text-[9px] mt-0.5">
-                                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                                    <p className="text-emerald-300 font-semibold flex items-center gap-1 text-[9px] mt-0.5">
+                                      <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                                       WA: {item.data.whatsapp}
                                     </p>
                                   )}
@@ -430,15 +431,15 @@ export default function BulkTransporterOnboarding() {
 
                               {/* Location */}
                               <TableCell>
-                                <div className="space-y-0.5 text-[10px] text-slate-700">
+                                <div className="space-y-0.5 text-[10px] text-white">
                                   <p className="font-bold">{item.data.city || '—'}</p>
-                                  <p className="text-slate-400 font-medium">{item.data.state || '—'}</p>
+                                  <p className="text-slate-300 font-medium">{item.data.state || '—'}</p>
                                 </div>
                               </TableCell>
 
                               {/* Credentials */}
                               <TableCell>
-                                <div className="font-mono text-[10px] text-slate-700 font-bold bg-slate-50 px-2 py-0.5 rounded border border-slate-200/50 inline-block">
+                                <div className="font-mono text-[10px] text-white font-bold bg-white/5 px-2 py-0.5 rounded border border-white/10 inline-block">
                                   Password: {item.data.password || 'password123'}
                                 </div>
                               </TableCell>
@@ -446,16 +447,16 @@ export default function BulkTransporterOnboarding() {
                               {/* Simple Status badge */}
                               <TableCell>
                                 {isInvalid ? (
-                                  <Badge className="bg-rose-50 text-rose-700 border border-rose-100 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 w-max">
+                                  <Badge className="bg-rose-500/20 text-rose-300 border border-rose-500/30 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 w-max">
                                     <AlertTriangle size={10} /> Invalid Data
                                   </Badge>
                                 ) : (
-                                  <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-100 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 w-max">
+                                  <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold text-[9px] px-2 py-0.5 rounded-full flex items-center gap-1 w-max">
                                     <Check size={10} /> Ready
                                   </Badge>
                                 )}
                                 {isInvalid && item.report.rejectionReason && (
-                                  <p className="text-[8px] text-rose-500 font-medium mt-1 leading-tight max-w-[130px]">
+                                  <p className="text-[8px] text-rose-400 font-medium mt-1 leading-tight max-w-[130px]">
                                     {item.report.rejectionReason}
                                   </p>
                                 )}
@@ -469,7 +470,7 @@ export default function BulkTransporterOnboarding() {
                                     onClick={() => handleApproveRecord(item.id, item.data.name || 'User')}
                                     disabled={isInvalid || isProcessing}
                                     size="icon" 
-                                    className="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 h-7 w-7 rounded border border-emerald-100 shadow-2xs"
+                                    className="bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 h-7 w-7 rounded border border-emerald-500/30 shadow-2xs"
                                     title="Register User Now"
                                   >
                                     <Check size={12} />
@@ -483,7 +484,7 @@ export default function BulkTransporterOnboarding() {
                                     }}
                                     disabled={isProcessing}
                                     size="icon" 
-                                    className="bg-rose-50 hover:bg-rose-100 text-rose-700 h-7 w-7 rounded border border-rose-100 shadow-2xs"
+                                    className="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 h-7 w-7 rounded border border-rose-500/30 shadow-2xs"
                                     title="Remove from list"
                                   >
                                     <Trash2 size={12} />

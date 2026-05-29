@@ -3,7 +3,7 @@ import {
   CreditCard, ArrowUpRight, Clock, CheckCircle2, Search, Filter, 
   MoreVertical, ShieldCheck, Download, Plus, Receipt, FileText, 
   Coins, Scale, AlertTriangle, ArrowRight, MapPin, Calendar, 
-  User, Building2, TrendingUp, BarChart3, Activity
+  User, Building2, TrendingUp, BarChart3, Activity, Upload
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,9 +18,85 @@ import { useToast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { exportToPDF } from '@/utils/exportPdf';
 
+interface SafeNgrokImageProps {
+  src: string;
+  alt: string;
+  className?: string;
+}
+
+const SafeNgrokImage: React.FC<SafeNgrokImageProps> = ({ src, alt, className }) => {
+  const [blobUrl, setBlobUrl] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<boolean>(false);
+
+  useEffect(() => {
+    let active = true;
+    let localUrl = '';
+
+    const fetchImage = async () => {
+      try {
+        setLoading(true);
+        setError(false);
+        const response = await fetch(src, {
+          headers: {
+            'ngrok-skip-browser-warning': 'true'
+          }
+        });
+        if (!response.ok) throw new Error('Failed to fetch image');
+        const blob = await response.blob();
+        
+        if (active) {
+          localUrl = URL.createObjectURL(blob);
+          setBlobUrl(localUrl);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error('SafeNgrokImage error:', err);
+        if (active) {
+          setError(true);
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchImage();
+
+    return () => {
+      active = false;
+      if (localUrl) {
+        URL.revokeObjectURL(localUrl);
+      }
+    };
+  }, [src]);
+
+  if (loading) {
+    return (
+      <div className="w-full h-[180px] bg-slate-100 animate-pulse flex items-center justify-center rounded-lg border border-slate-100">
+        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Loading Invoice Image...</span>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="w-full h-[100px] bg-red-50 border border-red-100 flex items-center justify-center rounded-lg p-4 text-center">
+        <span className="text-xs text-red-600 font-bold">Failed to load invoice image from server.</span>
+      </div>
+    );
+  }
+
+  return (
+    <img 
+      src={blobUrl} 
+      alt={alt} 
+      className={className} 
+    />
+  );
+};
+
 export default function Payments() {
   const { toast } = useToast();
-  const { payments, isLoading, fetchInvoicesFromBackend, settlePaymentOnBackend } = usePaymentStore();
+  const { payments, isLoading, fetchInvoicesFromBackend, settlePaymentOnBackend, ratePaymentOnBackend } = usePaymentStore();
   const { addNotification } = useTransporterStore();
 
   // Search & Filter state
@@ -31,6 +107,43 @@ export default function Payments() {
   const [isPayoutModalOpen, setIsPayoutModalOpen] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const [viewingInvoice, setViewingInvoice] = useState<PaymentEntry | null>(null);
+
+  // Settle & Document Upload state
+  const [payingInvoice, setPayingInvoice] = useState<PaymentEntry | null>(null);
+  const [selectedPayFile, setSelectedPayFile] = useState<File | null>(null);
+  const [payFileError, setPayFileError] = useState('');
+  const [isSubmittingPay, setIsSubmittingPay] = useState(false);
+
+  const handlePaySubmit = async () => {
+    if (!payingInvoice) return;
+    if (!selectedPayFile) {
+      setPayFileError("Payment receipt document is required.");
+      return;
+    }
+    setIsSubmittingPay(true);
+    try {
+      await settlePaymentOnBackend(
+        payingInvoice.paymentId, 
+        selectedPayFile
+      );
+      toast({
+        title: "Payment Settled & Released",
+        description: `Successfully uploaded document and marked Load ID: ${payingInvoice.loadId} as PAID. Status is now Released.`,
+        className: "bg-green-600 text-white font-bold border-none shadow-md"
+      });
+      setPayingInvoice(null);
+      setSelectedPayFile(null);
+      setPayFileError('');
+    } catch (err: any) {
+      toast({
+        title: "Settlement Failed",
+        description: err.message || "Failed to upload payment receipt.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSubmittingPay(false);
+    }
+  };
 
   // Fallback Form state
   const [selectedLoadId, setSelectedLoadId] = useState('');
@@ -85,7 +198,7 @@ export default function Payments() {
 
   const handleMarkAsPaid = async (tx: PaymentEntry) => {
     try {
-      await settlePaymentOnBackend(tx.paymentId, 'Bank Transfer', 0);
+      await settlePaymentOnBackend(tx.paymentId, null, 'Bank Transfer', 0);
       toast({
         title: "Invoice Settled Successfully",
         description: `Successfully marked Load ID: ${tx.loadId} as Paid.`,
@@ -125,6 +238,65 @@ export default function Payments() {
     }
   };
 
+  const handleDownloadInvoice = async (url: string, filename: string) => {
+    try {
+      toast({
+        title: "Starting Download",
+        description: "Fetching invoice document from backend...",
+      });
+      const response = await fetch(url, {
+        headers: {
+          'ngrok-skip-browser-warning': 'true'
+        }
+      });
+      if (!response.ok) throw new Error("Network response was not ok");
+      const blob = await response.blob();
+      
+      // Extract original extension from the URL path (e.g. invoice.jpg -> .jpg)
+      let ext = 'pdf';
+      const cleanUrl = url.split('?')[0]; // remove query params
+      const lastDotIndex = cleanUrl.lastIndexOf('.');
+      if (lastDotIndex !== -1) {
+        ext = cleanUrl.substring(lastDotIndex + 1).toLowerCase();
+      } else {
+        // Fallback to blob type
+        if (blob.type.includes('jpeg') || blob.type.includes('jpg')) ext = 'jpg';
+        else if (blob.type.includes('png')) ext = 'png';
+      }
+
+      // If filename has a hardcoded extension, replace it with the correct dynamic extension
+      let cleanFilename = filename;
+      const lastDotFilename = filename.lastIndexOf('.');
+      if (lastDotFilename !== -1) {
+        cleanFilename = filename.substring(0, lastDotFilename);
+      }
+      const finalFilename = `${cleanFilename}.${ext}`;
+
+      const localUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = localUrl;
+      link.download = finalFilename;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(localUrl);
+      
+      toast({
+        title: "Document Downloaded",
+        description: `${finalFilename} saved successfully.`,
+        className: "bg-green-600 text-white font-bold border-none"
+      });
+    } catch (err) {
+      console.error("Download failed:", err);
+      // Fallback: open in new tab
+      window.open(url, '_blank');
+      toast({
+        title: "Opened in New Tab",
+        description: "Opening document in a new tab.",
+      });
+    }
+  };
+
   const getStatusBadge = (status: PaymentEntry['status']) => {
     switch (status) {
       case 'Released':
@@ -147,8 +319,8 @@ export default function Payments() {
       {/* Header Panel */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Transporter Invoices</h1>
-          <p className="text-sm text-gray-500 mt-1">View and download invoices submitted by transporters and drivers.</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Invoices</h1>
+          <p className="text-sm text-slate-300 mt-1">View and download invoices submitted by transporters and drivers.</p>
         </div>
         <div className="flex items-center gap-2.5">
           {/* Invoices are created strictly by the transporters/drivers on their mobile app */}
@@ -159,42 +331,42 @@ export default function Payments() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         
         {/* Total Outstanding */}
-        <Card className="border-0 shadow-xs bg-slate-900 text-white overflow-hidden relative">
+        <Card className="border-0 shadow-xs glass-card text-white overflow-hidden relative">
           <div className="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-10">
             <CreditCard size={150} />
           </div>
           <CardContent className="p-6 space-y-4">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Total Outstanding</p>
-                <h3 className="text-3xl font-extrabold font-mono text-emerald-400">₹{stats.outstanding.toLocaleString('en-IN')}</h3>
+                <p className="text-[10px] font-bold text-slate-200 uppercase tracking-widest">Total Outstanding</p>
+                <h3 className="text-3xl font-extrabold font-mono text-emerald-300">₹{stats.outstanding.toLocaleString('en-IN')}</h3>
               </div>
               <div className="p-2.5 bg-white/10 rounded-xl text-white">
                 <CreditCard size={20} />
               </div>
             </div>
-            <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-800">
-              <span className="text-slate-400 font-medium">Pending Payouts:</span>
-              <span className="font-bold font-mono text-emerald-400">{stats.pendingCount} Bills</span>
+            <div className="flex items-center justify-between text-xs pt-2 border-t border-white/10">
+              <span className="text-slate-200 font-medium">Pending Payouts:</span>
+              <span className="font-bold font-mono text-emerald-300">{stats.pendingCount} Bills</span>
             </div>
           </CardContent>
         </Card>
 
         {/* Paid This Month */}
-        <Card className="border-0 shadow-xs bg-white overflow-hidden relative">
+        <Card className="border-0 shadow-xs glass-card overflow-hidden relative">
           <CardContent className="p-6 space-y-4">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Paid (Month)</p>
-                <h3 className="text-3xl font-extrabold font-mono text-slate-900">₹{stats.paidThisMonth.toLocaleString('en-IN')}</h3>
+                <p className="text-[10px] font-bold text-slate-200 uppercase tracking-widest">Paid (Month)</p>
+                <h3 className="text-3xl font-extrabold font-mono text-white">₹{stats.paidThisMonth.toLocaleString('en-IN')}</h3>
               </div>
-              <div className="p-2.5 bg-green-50 text-green-600 rounded-xl">
+              <div className="p-2.5 bg-green-500/20 text-green-300 rounded-xl">
                 <CheckCircle2 size={20} />
               </div>
             </div>
-            <div className="flex items-center justify-between text-xs pt-2 border-t border-slate-100">
-              <span className="text-slate-400 font-medium">Completed Trips Paid:</span>
-              <span className="font-bold text-green-600 flex items-center gap-1">
+            <div className="flex items-center justify-between text-xs pt-2 border-t border-white/10">
+              <span className="text-slate-200 font-medium">Completed Trips Paid:</span>
+              <span className="font-bold text-green-300 flex items-center gap-1">
                 <TrendingUp size={12} /> {stats.completedCount} Transactions
               </span>
             </div>
@@ -203,29 +375,28 @@ export default function Payments() {
       </div>
 
       {/* Transactions Table Container */}
-      <Card className="border-none shadow-sm bg-white">
-        <CardHeader className="pb-3 border-b border-slate-100">
+      <Card className="border-none shadow-sm glass-panel bg-transparent">
+        <CardHeader className="pb-3 border-b border-white/10">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-base font-bold text-slate-800">Invoices Ledger</CardTitle>
-              <CardDescription className="text-xs text-slate-400">View and download carrier-submitted invoices synced from completed trips.</CardDescription>
+              <CardTitle className="text-base font-bold text-white">Invoices Ledger</CardTitle>
+              <CardDescription className="text-xs text-slate-200">View and download carrier-submitted invoices synced from completed trips.</CardDescription>
             </div>
-            
-            <div className="flex items-center gap-2">
+                       <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={14} />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={14} />
                 <Input 
                   value={search}
                   onChange={e => setSearch(e.target.value)}
                   placeholder="Search by ID, Load, Carrier..." 
-                  className="pl-9 h-9 text-xs bg-slate-50 border-slate-200 w-[200px]" 
+                  className="pl-9 h-9 text-xs glass-input text-white w-[200px]" 
                 />
               </div>
               
               <select
                 value={statusFilter}
                 onChange={e => setStatusFilter(e.target.value)}
-                className="flex h-9 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-none outline-none focus:ring-1 focus:ring-primary text-slate-600"
+                className="flex h-9 rounded-md glass-input px-3 py-1.5 text-xs outline-none text-white [&>option]:bg-slate-900 [&>option]:text-white"
               >
                 <option value="All">All Statuses</option>
                 <option value="Pending">Pending</option>
@@ -240,60 +411,121 @@ export default function Payments() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <Table>
-              <TableHeader className="bg-slate-50">
+              <TableHeader className="bg-white/5 border-b border-white/10">
                 <TableRow>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] py-3.5 pl-6">Load ID</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Transporter</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Date Submitted</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Invoice Amount</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Status</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] text-right pr-6">Actions</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px] py-3.5 pl-6">Load ID</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Name</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Date Submitted</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Invoice Amount</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Status</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px] text-right pr-6">Actions</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px] pr-6 text-center">Rating & Coins</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredPayments.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-10 text-slate-400 italic text-xs">
+                    <TableCell colSpan={7} className="text-center py-10 text-slate-300 italic text-xs">
                       No matching records found in ledger.
                     </TableCell>
                   </TableRow>
                 ) : (
                   filteredPayments.map((tx) => (
-                    <TableRow key={tx.paymentId} className="hover:bg-slate-50/40">
-                      <TableCell className="text-xs font-mono font-bold text-primary pl-6">{tx.loadId}</TableCell>
-                      <TableCell className="text-xs font-semibold text-slate-700">{tx.transporter}</TableCell>
-                      <TableCell className="text-xs text-slate-500">{tx.createdAt}</TableCell>
-                      <TableCell className="font-bold text-xs font-mono text-slate-900">₹{tx.amount.toLocaleString()}</TableCell>
+                    <TableRow key={tx.paymentId} className="hover:bg-white/5 border-b border-white/5">
+                      <TableCell className="text-xs font-mono font-bold text-emerald-300 pl-6">{tx.loadId}</TableCell>
+                      <TableCell className="text-xs py-3.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-semibold text-white">{tx.transporter}</span>
+                          <span className="text-[9px] font-bold text-slate-200 bg-white/10 border border-white/10 px-1.5 py-0.5 rounded-md">
+                            {tx.transporterRole || 'Transporter'}
+                          </span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-xs text-slate-200">{tx.createdAt}</TableCell>
+                      <TableCell className="font-bold text-xs font-mono text-white">₹{tx.amount.toLocaleString()}</TableCell>
                       <TableCell>{getStatusBadge(tx.status)}</TableCell>
                       <TableCell className="text-right pr-6" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-end gap-1.5 select-none">
                           <Button 
                             onClick={() => setViewingInvoice(tx)}
                             size="sm"
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 h-7 text-[10px] px-2.5 font-bold uppercase rounded"
+                            className="bg-white/10 hover:bg-white/20 text-white h-7 text-[10px] px-2.5 font-bold uppercase rounded border border-white/10"
                           >
                             View Invoice
                           </Button>
                           {tx.status !== 'Released' && tx.status !== 'Completed' && (
                             <Button 
-                              onClick={() => handleMarkAsPaid(tx)}
-                              size="sm"
-                              className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-[10px] px-2.5 font-bold uppercase rounded shadow-xs"
-                            >
-                              Paid
-                            </Button>
-                          )}
-                          {tx.invoiceUrl && (
-                            <a 
-                              href={tx.invoiceUrl}
-                              download={`invoice-${tx.invoiceId}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center justify-center h-7 w-7 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-md transition-colors"
-                              title="Download Invoice"
-                            >
-                              <Download size={14} />
-                            </a>
+                               onClick={() => {
+                                 setPayingInvoice(tx);
+                                 setSelectedPayFile(null);
+                                 setPayFileError('');
+                               }}
+                               size="sm"
+                               className="bg-emerald-600 hover:bg-emerald-700 text-white h-7 text-[10px] px-2.5 font-bold uppercase rounded shadow-xs"
+                             >
+                               Paid
+                             </Button>
+                           )}
+                           {tx.invoiceUrl && (
+                             <button 
+                               onClick={() => handleDownloadInvoice(tx.invoiceUrl!, `invoice-${tx.invoiceId}.pdf`)}
+                               className="inline-flex items-center justify-center h-7 w-7 text-slate-300 hover:text-white hover:bg-white/10 rounded-md transition-colors animate-none"
+                               title="Download Invoice"
+                             >
+                               <Download size={14} />
+                             </button>
+                           )}
+                         </div>
+                       </TableCell>
+                      <TableCell className="pr-6 text-center" onClick={e => e.stopPropagation()}>
+                        <div className="flex flex-col items-center justify-center gap-1 min-w-[120px]">
+                          {tx.status !== 'Released' && tx.status !== 'Completed' ? (
+                            <span className="text-[10px] text-slate-300 italic">Pending Release</span>
+                          ) : tx.rating ? (
+                            <div className="flex flex-col items-center">
+                              {/* Rated display */}
+                              <div className="flex gap-0.5 text-amber-400 select-none">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <span key={star} className="text-sm">
+                                    {star <= tx.rating! ? '★' : '☆'}
+                                  </span>
+                                ))}
+                              </div>
+                              <span className="text-[9px] font-extrabold text-emerald-300 bg-emerald-500/20 px-1.5 py-0.5 rounded-full mt-1 border border-emerald-500/20 flex items-center gap-0.5">
+                                🪙 {tx.coins} Coins
+                              </span>
+                            </div>
+                          ) : (
+                            /* Interactive rating */
+                            <div className="flex flex-col items-center">
+                              <span className="text-[9px] text-slate-200 font-bold uppercase tracking-wider mb-0.5">Give Rating</span>
+                              <div className="flex gap-0.5 text-slate-200 hover:text-amber-400 cursor-pointer group/stars">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <span 
+                                    key={star} 
+                                    onClick={async () => {
+                                      try {
+                                        await ratePaymentOnBackend(tx.paymentId, star);
+                                        toast({
+                                          title: "Transporter Rated!",
+                                          description: `Gave ${star} Stars and awarded ${star * 2} Coins successfully.`,
+                                          className: "bg-emerald-600 text-white font-bold border-none"
+                                        });
+                                      } catch (err) {
+                                        toast({
+                                          title: "Rating Failed",
+                                          description: "Could not submit rating to backend.",
+                                          variant: "destructive"
+                                        });
+                                      }
+                                    }}
+                                    className="text-base transition-colors duration-150 hover:scale-125 hover:text-amber-400 group-hover/stars:text-amber-300 [&:hover~span]:text-slate-300"
+                                  >
+                                    ★
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
                           )}
                         </div>
                       </TableCell>
@@ -333,7 +565,7 @@ export default function Payments() {
               </div>
 
               {/* Invoice Specs */}
-              <div className="p-6 space-y-6">
+              <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto">
                 
                 {/* Transporter Details */}
                 <div className="grid grid-cols-2 gap-4 pb-4 border-b border-slate-100">
@@ -364,75 +596,39 @@ export default function Payments() {
                   </div>
                 </div>
 
-                {/* Submitted Documents & Verification */}
-                <div className="space-y-2 border-t pt-4">
-                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Submitted Audit Documents</span>
-                  <div className="grid grid-cols-3 gap-2">
-                    {viewingInvoice.rcUrl ? (
-                      <a 
-                        href={viewingInvoice.rcUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1 p-2 bg-slate-50 border rounded-lg text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-primary transition-all text-center"
-                      >
-                        <FileText size={12} className="text-blue-500" /> View RC
-                      </a>
-                    ) : (
-                      <span className="p-2 bg-slate-50 border rounded-lg text-[10px] text-center text-slate-400">No RC Uploaded</span>
-                    )}
-                    {viewingInvoice.insuranceUrl ? (
-                      <a 
-                        href={viewingInvoice.insuranceUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1 p-2 bg-slate-50 border rounded-lg text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-primary transition-all text-center"
-                      >
-                        <FileText size={12} className="text-blue-500" /> View Insurance
-                      </a>
-                    ) : (
-                      <span className="p-2 bg-slate-50 border rounded-lg text-[10px] text-center text-slate-400">No Insurance</span>
-                    )}
-                    {viewingInvoice.invoiceUrl ? (
-                      <a 
-                        href={viewingInvoice.invoiceUrl} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-1 p-2 bg-emerald-50 border border-emerald-100 rounded-lg text-[10px] font-bold text-emerald-700 hover:bg-emerald-100 hover:text-emerald-900 transition-all text-center"
-                      >
-                        <FileText size={12} className="text-emerald-500" /> View Invoice
-                      </a>
-                    ) : (
-                      <span className="p-2 bg-slate-50 border rounded-lg text-[10px] text-center text-slate-400">No Invoice file</span>
-                    )}
+                {/* Uploaded Invoice Document Preview */}
+                {viewingInvoice.invoiceUrl && (
+                  <div className="space-y-2 border-t pt-4">
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Uploaded Invoice Document</span>
+                    <div className="border border-slate-100 rounded-xl overflow-hidden bg-slate-50 flex flex-col p-3 gap-2">
+                      {viewingInvoice.invoiceUrl.toLowerCase().endsWith('.pdf') ? (
+                        <button
+                          type="button"
+                          onClick={() => handleDownloadInvoice(viewingInvoice.invoiceUrl!, `invoice-${viewingInvoice.invoiceId}.pdf`)}
+                          className="flex items-center justify-center gap-1.5 p-2 bg-blue-50 border border-blue-100 rounded-lg text-xs font-bold text-blue-700 hover:bg-blue-100 transition-all w-full"
+                        >
+                          <FileText size={14} /> Download Submitted Invoice (PDF)
+                        </button>
+                      ) : (
+                        <div className="flex flex-col gap-2">
+                          <div className="border rounded-lg overflow-hidden bg-white max-h-[220px] flex items-center justify-center p-1.5">
+                            <SafeNgrokImage 
+                              src={viewingInvoice.invoiceUrl} 
+                              alt="Transporter Invoice" 
+                              className="object-contain max-h-[200px] w-full rounded shadow-xs" 
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  
-                  {/* Inline Uploaded Invoice Image View */}
-                  {viewingInvoice.invoiceUrl && (
-                    <div className="space-y-2 border-t pt-4">
-                      <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Uploaded Invoice Document</span>
-                      <div className="border border-slate-100 rounded-xl overflow-hidden bg-slate-50 flex items-center justify-center p-2 relative group max-h-[220px]">
-                        <img 
-                          src={viewingInvoice.invoiceUrl} 
-                          alt="Transporter Invoice" 
-                          className="object-contain max-h-[200px] w-full rounded shadow-xs" 
-                        />
-                      </div>
-                    </div>
-                  )}
+                )}
 
-                  {viewingInvoice.invoiceRemarks && (
-                    <div className="bg-amber-50/50 border border-amber-100 p-2.5 rounded-lg mt-2">
-                      <span className="text-[9px] font-bold text-amber-800 uppercase block">Remarks from Transporter/Driver:</span>
-                      <p className="text-[11px] text-slate-600 italic mt-0.5">{viewingInvoice.invoiceRemarks}</p>
-                    </div>
-                  )}
-                </div>
 
-                {/* Final payable */}
-                <div className="bg-slate-50 rounded-xl p-4 flex justify-between items-center border border-slate-100">
-                  <span className="text-xs font-extrabold text-slate-800 uppercase tracking-wider">Total Invoice Amount</span>
-                  <span className="text-xl font-black font-mono text-primary">₹{viewingInvoice.amount.toLocaleString('en-IN')}</span>
-                </div>
+
+
+
+
 
               </div>
 
@@ -442,15 +638,12 @@ export default function Payments() {
                   Close
                 </Button>
                 {viewingInvoice.invoiceUrl ? (
-                  <a 
-                    href={viewingInvoice.invoiceUrl} 
-                    download={`invoice-${viewingInvoice.invoiceId}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button 
+                    onClick={() => handleDownloadInvoice(viewingInvoice.invoiceUrl!, `invoice-${viewingInvoice.invoiceId}.pdf`)}
                     className="inline-flex items-center justify-center gap-1.5 bg-primary hover:bg-primary-hover text-white h-9 px-4 rounded shadow-sm font-bold uppercase text-xs tracking-wider transition-all"
                   >
                     <Download size={14} /> Download Invoice File
-                  </a>
+                  </button>
                 ) : (
                   <Button 
                     disabled 
@@ -459,6 +652,92 @@ export default function Payments() {
                     <Download size={14} /> No Invoice File
                   </Button>
                 )}
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+
+
+      {/* MODAL 3: Settle Payment & Upload Receipt Dialog */}
+      <Dialog open={!!payingInvoice} onOpenChange={(val) => !val && setPayingInvoice(null)}>
+        <DialogContent className="sm:max-w-[450px] border-0 rounded-2xl shadow-xl bg-white p-6 font-sans">
+          <DialogHeader className="pb-4 border-b border-slate-100">
+            <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <Coins className="text-emerald-500" size={18} /> Release Payment & Upload Receipt
+            </DialogTitle>
+            <DialogDescription className="text-xs text-slate-400">
+              Upload the bank transaction receipt or payment document to mark this invoice as Paid.
+            </DialogDescription>
+          </DialogHeader>
+
+          {payingInvoice && (
+            <div className="space-y-6 pt-4">
+              {/* Load Info */}
+              <div className="grid grid-cols-2 gap-4 p-4 bg-slate-50 rounded-xl border border-slate-100 text-xs">
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Load ID</span>
+                  <span className="font-mono font-bold text-primary">{payingInvoice.loadId}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Payable Amount</span>
+                  <span className="font-mono font-bold text-slate-900">₹{payingInvoice.amount.toLocaleString()}</span>
+                </div>
+                <div className="col-span-2 pt-2 border-t border-slate-200">
+                  <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider block">Transporter</span>
+                  <span className="font-semibold text-slate-800">{payingInvoice.transporter}</span>
+                </div>
+              </div>
+
+
+
+              {/* Upload Document Selector */}
+              <div className="space-y-2">
+                <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Transaction Receipt / Document *</label>
+                <div className="border border-dashed border-slate-200 bg-slate-50/50 rounded-xl p-6 text-center relative hover:bg-slate-50 transition-all">
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setSelectedPayFile(e.target.files[0]);
+                        setPayFileError("");
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  <div className="space-y-1.5 pointer-events-none">
+                    <Upload className="mx-auto text-slate-400" size={24} />
+                    <p className="text-xs font-semibold text-slate-700">
+                      {selectedPayFile ? selectedPayFile.name : "Click to select Receipt Photo/PDF"}
+                    </p>
+                    <p className="text-[10px] text-slate-400">Supports JPG, PNG, PDF up to 5MB</p>
+                  </div>
+                </div>
+                {payFileError && <p className="text-xs text-red-500 font-medium">{payFileError}</p>}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="pt-4 border-t flex justify-end gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setPayingInvoice(null);
+                    setSelectedPayFile(null);
+                    setPayFileError("");
+                  }}
+                  className="h-9 px-4 text-xs font-semibold border-slate-200"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handlePaySubmit}
+                  disabled={isSubmittingPay}
+                  className="bg-emerald-600 hover:bg-emerald-700 text-white h-9 px-4 text-xs font-bold uppercase rounded shadow-xs"
+                >
+                  {isSubmittingPay ? "Releasing..." : "Confirm & Settle"}
+                </Button>
               </div>
             </div>
           )}

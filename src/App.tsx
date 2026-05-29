@@ -32,7 +32,6 @@ const App = () => {
           <Route path="reports" element={<Reports />} />
           
           <Route path="settings" element={<ProfileSettingsPage />} />
-          <Route path="settings/notifications" element={<div>Notifications Settings</div>} />
           <Route path="*" element={<div>404 Not Found</div>} />
         </Route>
       </Routes>

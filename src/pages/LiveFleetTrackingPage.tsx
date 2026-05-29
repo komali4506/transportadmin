@@ -635,60 +635,58 @@ export default function LiveFleetTrackingPage() {
     <div className="space-y-6 max-w-full overflow-hidden pb-12 font-sans">
       
       {/* Page Title Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
+          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
             <Compass className="text-primary h-6 w-6 animate-spin-slow" /> Live Fleet Tracking Center
           </h1>
-          <p className="text-sm text-slate-500 mt-1">Monitor active transporter vehicles, driver routes, stoppages, and live logistics movement.</p>
+          <p className="text-sm text-slate-200 mt-1">Monitor active transporter vehicles, driver routes, stoppages, and live logistics movement.</p>
         </div>
-        
-
       </div>
 
       {/* Top GPS Analytics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="border-0 shadow-xs p-4 bg-slate-900 text-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-slate-800 opacity-20"><Truck size={60} /></div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Active Fleet</p>
-          <h3 className="text-2xl font-extrabold font-mono text-emerald-400 mt-1">{stats.active}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">vehicles live</span>
+        <Card className="border-0 shadow-xs p-4 glass-card text-white relative overflow-hidden">
+          <div className="absolute right-2 bottom-2 text-slate-700 opacity-20"><Truck size={60} /></div>
+          <p className="text-[9px] font-bold text-slate-200 uppercase tracking-widest">Active Fleet</p>
+          <h3 className="text-2xl font-extrabold font-mono text-emerald-300 mt-1">{stats.active}</h3>
+          <span className="text-[9px] text-slate-300 font-medium">vehicles live</span>
         </Card>
 
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-rose-100 opacity-30"><Clock size={60} /></div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Delayed Trips</p>
-          <h3 className="text-2xl font-extrabold font-mono text-rose-600 mt-1">{stats.delayed}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">require monitoring</span>
+        <Card className="border-0 shadow-xs p-4 glass-card relative overflow-hidden text-white">
+          <div className="absolute right-2 bottom-2 text-rose-300 opacity-10"><Clock size={60} /></div>
+          <p className="text-[9px] font-bold text-slate-200 uppercase tracking-widest">Delayed Trips</p>
+          <h3 className="text-2xl font-extrabold font-mono text-rose-400 mt-1">{stats.delayed}</h3>
+          <span className="text-[9px] text-slate-300 font-medium">require monitoring</span>
         </Card>
 
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-emerald-100 opacity-30"><CheckCircle2 size={60} /></div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Completed</p>
-          <h3 className="text-2xl font-extrabold font-mono text-emerald-600 mt-1">{stats.completed}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">deliveries verified</span>
+        <Card className="border-0 shadow-xs p-4 glass-card relative overflow-hidden text-white">
+          <div className="absolute right-2 bottom-2 text-emerald-300 opacity-10"><CheckCircle2 size={60} /></div>
+          <p className="text-[9px] font-bold text-slate-200 uppercase tracking-widest">Completed</p>
+          <h3 className="text-2xl font-extrabold font-mono text-emerald-300 mt-1">{stats.completed}</h3>
+          <span className="text-[9px] text-slate-300 font-medium">deliveries verified</span>
         </Card>
       </div>
 
       {/* Active Trips Tabular Grid */}
-      <Card className="border-none shadow-sm bg-white mt-6">
-        <CardHeader className="pb-3 border-b border-slate-100 flex flex-row items-center justify-between gap-4 flex-wrap">
+      <Card className="border-none shadow-sm glass-panel bg-transparent mt-6">
+        <CardHeader className="pb-3 border-b border-white/10 flex flex-row items-center justify-between gap-4 flex-wrap">
           <div>
-            <CardTitle className="text-sm font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+            <CardTitle className="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-1.5">
               <Activity size={15} className="text-emerald-500" /> Active Fleet Registry Table
             </CardTitle>
-            <CardDescription className="text-xs text-slate-400 mt-0.5">Real-time coordinates and speed indicators.</CardDescription>
+            <CardDescription className="text-xs text-slate-200 mt-0.5">Real-time coordinates and speed indicators.</CardDescription>
           </div>
 
           <div className="flex items-center gap-3">
             {/* Search Input */}
             <div className="relative w-48">
-              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400" size={13} />
+              <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-300" size={13} />
               <Input 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search Truck, Driver..." 
-                className="pl-8 bg-gray-50 border-gray-200 text-xs h-8" 
+                className="pl-8 glass-input text-white text-xs h-8" 
               />
             </div>
 
@@ -696,7 +694,7 @@ export default function LiveFleetTrackingPage() {
             <select
               value={statusFilter}
               onChange={e => setStatusFilter(e.target.value)}
-              className="flex h-8 rounded-md border border-slate-200 bg-white px-2.5 py-1 text-xs outline-none focus:ring-1 focus:ring-primary text-slate-600"
+              className="flex h-8 rounded-md glass-input px-2.5 py-1 text-xs outline-none text-white [&>option]:bg-slate-900 [&>option]:text-white"
             >
               <option value="All">All Statuses</option>
               <option value="Moving">Moving</option>
@@ -711,23 +709,22 @@ export default function LiveFleetTrackingPage() {
         <CardContent className="p-0">
           <div className="overflow-x-auto w-full">
             <Table>
-              <TableHeader className="bg-slate-50/50">
+              <TableHeader className="bg-white/5 border-b border-white/10">
                 <TableRow>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] pl-6 py-3">Bid ID</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Route & Stops</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Vehicle Number</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Driver Name</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Transporter</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Current Coordinates</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Last Updated</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Trip Status</TableHead>
-                  <TableHead className="font-bold text-slate-500 uppercase text-[10px] text-right pr-6">Dispatcher Actions</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px] pl-6 py-3">Bid ID</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Route & Stops</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Vehicle Number</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Driver Name</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Current Coordinates</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Last Updated</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Trip Status</TableHead>
+                  <TableHead className="font-bold text-slate-200 uppercase text-[10px] text-right pr-6">Dispatcher Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {filteredTrips.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={9} className="text-center py-8 text-slate-400 italic text-xs">
+                    <TableCell colSpan={8} className="text-center py-8 text-slate-400 italic text-xs">
                       No active tracked trips matching criteria.
                     </TableCell>
                   </TableRow>
@@ -736,35 +733,34 @@ export default function LiveFleetTrackingPage() {
                     <TableRow 
                       key={tr.id}
                       onClick={() => setSelectedTripId(tr.id)}
-                      className="hover:bg-slate-50/50 cursor-pointer transition-all border-b last:border-0"
+                      className="hover:bg-white/5 cursor-pointer transition-all border-b border-white/5 last:border-0"
                     >
-                      <TableCell className="pl-6 py-3.5 font-bold font-mono text-slate-800 text-xs">{tr.bidId}</TableCell>
+                      <TableCell className="pl-6 py-3.5 font-bold font-mono text-white text-xs">{tr.bidId}</TableCell>
                       <TableCell className="py-3.5">
-                        <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-slate-700 bg-slate-50/50 border border-slate-100 rounded-lg px-2.5 py-1 w-fit max-w-[340px]">
-                          <span className="text-blue-600 font-semibold">{tr.fromLoc || tr.origin.name}</span>
+                        <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-bold text-slate-200 bg-white/5 border border-white/10 rounded-lg px-2.5 py-1 w-fit max-w-[340px]">
+                          <span className="text-blue-300 font-semibold">{tr.fromLoc || tr.origin.name}</span>
                           {(tr.loadStops || []).map((stop: string, idx: number) => (
                             <React.Fragment key={idx}>
-                              <span className="text-slate-400 font-normal">→</span>
-                              <span className="text-amber-600 font-semibold">{stop}</span>
+                              <span className="text-slate-300 font-normal">→</span>
+                              <span className="text-amber-300 font-semibold">{stop}</span>
                             </React.Fragment>
                           ))}
-                          <span className="text-slate-400 font-normal">→</span>
-                          <span className="text-emerald-600 font-semibold">{tr.toLoc || tr.destination.name}</span>
+                          <span className="text-slate-300 font-normal">→</span>
+                          <span className="text-emerald-300 font-semibold">{tr.toLoc || tr.destination.name}</span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs font-bold font-mono text-slate-700">{tr.vehicleNumber}</TableCell>
-                      <TableCell className="text-xs font-semibold text-slate-700">{tr.driverName}</TableCell>
-                      <TableCell className="text-xs text-slate-500">{tr.transporter}</TableCell>
-                      <TableCell className="text-xs font-mono text-slate-500 text-[10px]">
+                      <TableCell className="text-xs font-bold font-mono text-slate-200">{tr.vehicleNumber}</TableCell>
+                      <TableCell className="text-xs font-semibold text-slate-200">{tr.driverName}</TableCell>
+                      <TableCell className="text-xs font-mono text-slate-200 text-[10px]">
                         {tr.currentCoords.lat.toFixed(4)}N, {tr.currentCoords.lng.toFixed(4)}E
                       </TableCell>
-                      <TableCell className="text-xs text-slate-400 font-medium">{tr.lastUpdated}</TableCell>
+                      <TableCell className="text-xs text-slate-300 font-medium">{tr.lastUpdated}</TableCell>
                       <TableCell>{getStatusBadge(tr.status)}</TableCell>
                       <TableCell className="text-right pr-6" onClick={e => e.stopPropagation()}>
                         <Button 
                           onClick={() => setSelectedTripId(tr.id)}
                           size="sm" 
-                          className="bg-slate-900 hover:bg-slate-800 text-white h-7 text-[10px] font-bold uppercase rounded"
+                          className="bg-white/10 hover:bg-white/20 text-white h-7 text-[10px] font-bold uppercase rounded border border-white/10"
                         >
                           View Tracking
                         </Button>
@@ -797,86 +793,86 @@ export default function LiveFleetTrackingPage() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-lg bg-white shadow-2xl z-50 flex flex-col font-sans"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-lg glass-sidebar bg-slate-900/90 shadow-2xl z-50 flex flex-col font-sans border-l border-white/10"
             >
               {/* Header */}
-              <div className="bg-slate-900 text-white p-6 flex justify-between items-center relative overflow-hidden">
+              <div className="bg-white/5 border-b border-white/10 text-white p-6 flex justify-between items-center relative overflow-hidden">
                 <div className="space-y-1 z-10">
                   <div className="flex items-center gap-2">
-                    <Badge className="bg-slate-800 text-emerald-400 border border-slate-700 font-bold text-[9px] uppercase px-2 py-0.5">
+                    <Badge className="bg-white/10 text-emerald-400 border border-white/10 font-bold text-[9px] uppercase px-2 py-0.5">
                       GPS Control Tower Active
                     </Badge>
-                    <span className="text-xs text-slate-400 font-mono">TRIP ID: {selectedTrip.id}</span>
+                    <span className="text-xs text-slate-300 font-mono">TRIP ID: {selectedTrip.id}</span>
                   </div>
-                  <h3 className="text-lg font-extrabold font-mono">{selectedTrip.vehicleNumber}</h3>
-                  <p className="text-xs text-slate-400">Carrier: {selectedTrip.transporter}</p>
+                  <h3 className="text-lg font-extrabold font-mono text-white">{selectedTrip.vehicleNumber}</h3>
+                  <p className="text-xs text-slate-300">Carrier: {selectedTrip.transporter}</p>
                 </div>
                 <Button 
                   variant="ghost" 
                   size="icon" 
                   onClick={() => setSelectedTripId(null)}
-                  className="h-8 w-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-800 z-10"
+                  className="h-8 w-8 rounded-full text-slate-300 hover:text-white hover:bg-white/10 z-10"
                 >
                   <X size={18} />
                 </Button>
               </div>
 
               {/* Content body */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar">
+              <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar text-white">
 
                 {/* Dispatch coordinates, Bid ID, and Bid Details */}
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Planned Transit Corridor</h4>
-                    <Badge variant="outline" className="text-[10px] font-mono font-bold bg-slate-50 border-slate-200 text-slate-700">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Planned Transit Corridor</h4>
+                    <Badge variant="outline" className="text-[10px] font-mono font-bold bg-white/10 border-white/10 text-white">
                       BID ID: {selectedTrip.bidId}
                     </Badge>
                   </div>
-                  <div className="bg-slate-50 border border-slate-100 rounded-xl p-4 text-xs space-y-4">
+                  <div className="bg-white/5 border border-white/10 rounded-xl p-4 text-xs space-y-4">
                     
                     {/* Origin destination nodes */}
                     <div className="flex justify-between items-start gap-4">
                       <div>
-                        <span className="text-[9px] text-slate-400 uppercase font-bold block">Pickup Origin</span>
-                        <span className="font-bold text-slate-800 block mt-0.5">{selectedTrip.origin.name}</span>
-                        <span className="font-mono text-[9px] text-slate-400 mt-0.5 block">{selectedTrip.origin.lat.toFixed(4)}N, {selectedTrip.origin.lng.toFixed(4)}E</span>
+                        <span className="text-[9px] text-slate-300 uppercase font-bold block">Pickup Origin</span>
+                        <span className="font-bold text-white block mt-0.5">{selectedTrip.origin.name}</span>
+                        <span className="font-mono text-[9px] text-slate-300 mt-0.5 block">{selectedTrip.origin.lat.toFixed(4)}N, {selectedTrip.origin.lng.toFixed(4)}E</span>
                       </div>
-                      <ArrowRight size={14} className="text-slate-400 mt-4" />
+                      <ArrowRight size={14} className="text-slate-300 mt-4" />
                       <div className="text-right">
-                        <span className="text-[9px] text-slate-400 uppercase font-bold block">Delivery Target</span>
-                        <span className="font-bold text-slate-800 block mt-0.5">{selectedTrip.destination.name}</span>
-                        <span className="font-mono text-[9px] text-slate-400 mt-0.5 block">{selectedTrip.destination.lat.toFixed(4)}N, {selectedTrip.destination.lng.toFixed(4)}E</span>
+                        <span className="text-[9px] text-slate-300 uppercase font-bold block">Delivery Target</span>
+                        <span className="font-bold text-white block mt-0.5">{selectedTrip.destination.name}</span>
+                        <span className="font-mono text-[9px] text-slate-300 mt-0.5 block">{selectedTrip.destination.lat.toFixed(4)}N, {selectedTrip.destination.lng.toFixed(4)}E</span>
                       </div>
                     </div>
 
                     {/* Geofence warnings */}
                     {selectedTrip.deviationAlert && (
-                      <div className="bg-red-50 border border-red-100 text-red-800 rounded-xl p-3 flex items-start gap-2.5">
-                        <AlertCircle size={14} className="text-red-600 mt-0.5" />
+                      <div className="bg-red-500/20 border border-red-500/30 text-red-300 rounded-xl p-3 flex items-start gap-2.5">
+                        <AlertCircle size={14} className="text-red-400 mt-0.5" />
                         <div>
-                          <p className="text-xs font-bold text-red-900">NH Corridor Route Deviation</p>
-                          <p className="text-[10px] text-slate-600 mt-0.5">Alert triggered: Driver departed corridor limit. Immediate call required.</p>
+                          <p className="text-xs font-bold text-red-300">NH Corridor Route Deviation</p>
+                          <p className="text-[10px] text-slate-200 mt-0.5">Alert triggered: Driver departed corridor limit. Immediate call required.</p>
                         </div>
                       </div>
                     )}
 
                     {/* Clean dashed line separator & Bid details */}
-                    <div className="border-t border-dashed border-slate-200 pt-3.5 mt-3.5 flex justify-between items-center text-xs">
+                    <div className="border-t border-dashed border-white/10 pt-3.5 mt-3.5 flex justify-between items-center text-xs">
                       <div>
-                        <span className="text-[9px] text-slate-400 uppercase font-bold block">Bidding Rate</span>
-                        <span className="font-extrabold font-mono text-emerald-600 block mt-0.5">
-                          ₹{(selectedTrip.pricePerTonne || 1200).toLocaleString('en-IN')} <span className="text-[9px] font-normal text-slate-400">/ Tonne</span>
+                        <span className="text-[9px] text-slate-300 uppercase font-bold block">Bidding Rate</span>
+                        <span className="font-extrabold font-mono text-emerald-300 block mt-0.5">
+                          ₹{(selectedTrip.pricePerTonne || 1200).toLocaleString('en-IN')} <span className="text-[9px] font-normal text-slate-300">/ Tonne</span>
                         </span>
                       </div>
                       <div className="text-center">
-                        <span className="text-[9px] text-slate-400 uppercase font-bold block">Total Tonnes</span>
-                        <span className="font-bold font-mono text-slate-700 block mt-0.5">
-                          {selectedTrip.tonnes || 20} <span className="text-[9px] font-normal text-slate-400">Tons</span>
+                        <span className="text-[9px] text-slate-300 uppercase font-bold block">Total Tonnes</span>
+                        <span className="font-bold font-mono text-white block mt-0.5">
+                          {selectedTrip.tonnes || 20} <span className="text-[9px] font-normal text-slate-300">Tons</span>
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-[9px] text-slate-400 uppercase font-bold block">Total Amount</span>
-                        <span className="font-extrabold font-mono text-slate-900 block mt-0.5">
+                        <span className="text-[9px] text-slate-300 uppercase font-bold block">Total Amount</span>
+                        <span className="font-extrabold font-mono text-white block mt-0.5">
                           ₹{(selectedTrip.bidAmount || ((selectedTrip.pricePerTonne || 1200) * (selectedTrip.tonnes || 20))).toLocaleString('en-IN')}
                         </span>
                       </div>
@@ -885,9 +881,9 @@ export default function LiveFleetTrackingPage() {
                 </div>
 
                 {/* INDIVIDUAL TRACKING MAP FROM LOADING GPS TO UNLOADING GPS */}
-                <div className="w-full h-[260px] rounded-xl overflow-hidden border border-slate-200 relative bg-slate-50 shadow-inner">
+                <div className="w-full h-[260px] rounded-xl overflow-hidden border border-white/10 relative bg-slate-800/40 shadow-inner">
                   {!leafletLoaded && (
-                    <div className="absolute inset-0 flex items-center justify-center text-slate-400 bg-slate-50 z-40">
+                    <div className="absolute inset-0 flex items-center justify-center text-slate-300 bg-slate-800/40 z-40">
                       <div className="text-center space-y-2">
                         <Activity className="h-6 w-6 text-primary animate-pulse mx-auto" />
                         <p className="text-xs">Mounting individual map...</p>
@@ -899,21 +895,21 @@ export default function LiveFleetTrackingPage() {
 
                 {/* Driver profile */}
                 <div className="space-y-3">
-                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Driver Logistics Details</h4>
-                  <div className="border border-slate-100 rounded-xl p-4 flex items-center justify-between gap-4">
+                  <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Driver Logistics Details</h4>
+                  <div className="border border-white/10 rounded-xl p-4 flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-700 font-bold border">
+                      <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white font-bold border border-white/10">
                         {selectedTrip.driverName.charAt(0)}
                       </div>
                       <div>
-                        <p className="text-xs font-bold text-slate-800">{selectedTrip.driverName}</p>
-                        <p className="text-[10px] text-slate-500 font-mono mt-0.5">{selectedTrip.driverPhone}</p>
+                        <p className="text-xs font-bold text-white">{selectedTrip.driverName}</p>
+                        <p className="text-[10px] text-slate-200 font-mono mt-0.5">{selectedTrip.driverPhone}</p>
                       </div>
                     </div>
 
                     <div className="flex gap-1.5">
                       <a href={`tel:${selectedTrip.driverPhone}`}>
-                        <Button size="icon" variant="outline" className="h-8 w-8 text-emerald-600 border-emerald-100 bg-emerald-50 hover:bg-emerald-100">
+                        <Button size="icon" variant="outline" className="h-8 w-8 text-emerald-300 border-emerald-500/20 bg-emerald-500/20 hover:bg-emerald-500/30">
                           <PhoneCall size={13} />
                         </Button>
                       </a>
@@ -922,20 +918,20 @@ export default function LiveFleetTrackingPage() {
                 </div>
 
                 {selectedTrip.status === 'PENDING' && (
-                  <div className="space-y-3 pt-4 border-t">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Administrative Tower Controls</h4>
-                    <form onSubmit={handleDispatchSubmit} className="space-y-3 border rounded-xl p-4 bg-slate-50/50">
-                      <p className="text-[10px] font-bold text-slate-500 uppercase">Assign Location & Dispatch Details</p>
+                  <div className="space-y-3 pt-4 border-t border-white/10">
+                    <h4 className="text-xs font-bold text-slate-300 uppercase tracking-wider">Administrative Tower Controls</h4>
+                    <form onSubmit={handleDispatchSubmit} className="space-y-3 border border-white/10 rounded-xl p-4 bg-white/5">
+                      <p className="text-[10px] font-bold text-slate-200 uppercase">Assign Location & Dispatch Details</p>
                       
-                      <div className="space-y-2">
+                      <div className="space-y-2 text-white">
                         <div className="space-y-1">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase block">Loading Address</label>
+                          <label className="text-[9px] font-bold text-slate-200 uppercase block">Loading Address</label>
                           <div className="flex gap-2">
                             <Input 
                               value={loadingAddress}
                               onChange={e => setLoadingAddress(e.target.value)}
                               placeholder="Loading Address"
-                              className="bg-white h-8 text-xs flex-1"
+                              className="glass-input text-white h-8 text-xs flex-1"
                               required
                             />
                             <Button
@@ -951,24 +947,24 @@ export default function LiveFleetTrackingPage() {
                         </div>
                         
                         <div className="space-y-1">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase block">Loading GPS Coordinates</label>
+                          <label className="text-[9px] font-bold text-slate-200 uppercase block">Loading GPS Coordinates</label>
                           <Input 
                             value={loadingGps}
                             onChange={e => setLoadingGps(e.target.value)}
                             placeholder="lat, lng (e.g. 17.385044, 78.486671)"
-                            className="bg-white h-8 text-xs font-mono"
+                            className="glass-input text-white h-8 text-xs font-mono"
                             required
                           />
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase block">Unloading Address</label>
+                          <label className="text-[9px] font-bold text-slate-200 uppercase block">Unloading Address</label>
                           <div className="flex gap-2">
                             <Input 
                               value={unloadingAddress}
                               onChange={e => setUnloadingAddress(e.target.value)}
                               placeholder="Unloading Address"
-                              className="bg-white h-8 text-xs flex-1"
+                              className="glass-input text-white h-8 text-xs flex-1"
                               required
                             />
                             <Button
@@ -984,12 +980,12 @@ export default function LiveFleetTrackingPage() {
                         </div>
 
                         <div className="space-y-1">
-                          <label className="text-[9px] font-bold text-slate-500 uppercase block">Unloading GPS Coordinates</label>
+                          <label className="text-[9px] font-bold text-slate-200 uppercase block">Unloading GPS Coordinates</label>
                           <Input 
                             value={unloadingGps}
                             onChange={e => setUnloadingGps(e.target.value)}
                             placeholder="lat, lng (e.g. 16.506174, 80.648015)"
-                            className="bg-white h-8 text-xs font-mono"
+                            className="glass-input text-white h-8 text-xs font-mono"
                             required
                           />
                         </div>

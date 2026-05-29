@@ -535,55 +535,55 @@ export default function Transporters() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Approved': return <Badge className="bg-emerald-50 text-emerald-700 border border-emerald-200/50 px-2.5 py-1 font-bold">Verified</Badge>;
-      case 'Pending': return <Badge className="bg-amber-50 text-amber-700 border border-amber-200/50 px-2.5 py-1 font-bold animate-pulse">Pending Review</Badge>;
-      case 'Under Review': return <Badge className="bg-blue-50 text-blue-700 border border-blue-200/50 px-2.5 py-1 font-bold">Under Review</Badge>;
-      case 'Blacklisted': return <Badge className="bg-rose-50 text-rose-700 border border-rose-200/50 px-2.5 py-1 font-bold">Blacklisted</Badge>;
-      default: return <Badge variant="outline" className="px-2.5 py-1 font-bold">{status}</Badge>;
+      case 'Approved': return <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 font-bold">Verified</Badge>;
+      case 'Pending': return <Badge className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 font-bold animate-pulse">Pending Review</Badge>;
+      case 'Under Review': return <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2.5 py-1 font-bold">Under Review</Badge>;
+      case 'Blacklisted': return <Badge className="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 font-bold">Blacklisted</Badge>;
+      default: return <Badge variant="outline" className="px-2.5 py-1 font-bold text-white border-white/10">{status}</Badge>;
     }
   };
 
   const getDocStatusBadge = (status: DocumentStatus) => {
     switch (status) {
-      case 'Verified': return <Badge className="bg-emerald-50 text-emerald-700 border-none text-[10px] font-bold">Verified</Badge>;
-      case 'Pending': return <Badge className="bg-amber-50 text-amber-700 border-none text-[10px] font-bold animate-pulse">Review Pending</Badge>;
-      case 'Rejected': return <Badge className="bg-rose-50 text-rose-700 border-none text-[10px] font-bold">Rejected</Badge>;
-      case 'Expired': return <Badge className="bg-red-100 text-red-800 border-none text-[10px] font-bold flex items-center gap-1"><AlertTriangle size={9} /> Expired</Badge>;
-      default: return <Badge variant="outline" className="text-[10px]">{status}</Badge>;
+      case 'Verified': return <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">Verified</Badge>;
+      case 'Pending': return <Badge className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold animate-pulse">Review Pending</Badge>;
+      case 'Rejected': return <Badge className="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">Rejected</Badge>;
+      case 'Expired': return <Badge className="bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] font-bold flex items-center gap-1"><AlertTriangle size={9} /> Expired</Badge>;
+      default: return <Badge variant="outline" className="text-[10px] text-white border-white/10">{status}</Badge>;
     }
   };
 
   return (
-    <div className="space-y-6 max-w-full overflow-hidden pb-12">
+    <div className="space-y-6 max-w-full overflow-hidden pb-12 font-sans text-white">
       
       {/* Premium Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-white/10 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">
-            <Building className="text-slate-800 h-6 w-6" /> Transporter Registry & Verification
+          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
+            <Building className="text-white h-6 w-6" /> Transporter Registry & Verification
           </h1>
-          <p className="text-sm text-slate-500 mt-1">Manage transporter registrations, KYC verification, and compliance approvals.</p>
+          <p className="text-sm text-slate-200 mt-1">Manage transporter registrations, KYC verification, and compliance approvals.</p>
         </div>
         <div className="flex items-center gap-3">
           <Badge 
             className={`px-3 py-1 text-xs font-bold flex items-center gap-1.5 rounded-full border transition-all duration-300 ${
               isLiveMode 
-                ? "bg-emerald-50 border-emerald-200 text-emerald-800" 
-                : "bg-amber-50 border-amber-200 text-amber-800"
+                ? "bg-emerald-500/20 border-emerald-500/30 text-emerald-300" 
+                : "bg-amber-500/20 border-amber-500/30 text-amber-300"
             }`}
           >
             <span className={`w-2 h-2 rounded-full ${isLiveMode ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
             {isLiveMode ? "Live API Connected" : "Demo Mode"}
           </Badge>
           {duplicateAlerts.length > 0 && (
-            <Badge className="bg-amber-50 border border-amber-200 text-amber-800 px-3 py-1 text-xs font-bold animate-pulse flex items-center gap-1.5 rounded-full">
-              <ShieldAlert size={13} className="text-amber-600" />
+            <Badge className="bg-amber-500/20 border border-amber-500/30 text-amber-300 px-3 py-1 text-xs font-bold animate-pulse flex items-center gap-1.5 rounded-full">
+              <ShieldAlert size={13} className="text-amber-400" />
               {duplicateAlerts.length} Compliance Conflicts
             </Badge>
           )}
           {notifications.filter(n => !n.read).length > 0 && (
-            <Badge className="bg-rose-50 border border-rose-200 text-rose-800 px-3 py-1 text-xs font-bold flex items-center gap-1.5 rounded-full">
-              <Bell size={13} className="text-rose-600 animate-bounce" />
+            <Badge className="bg-rose-500/20 border border-rose-500/30 text-rose-300 px-3 py-1 text-xs font-bold flex items-center gap-1.5 rounded-full">
+              <Bell size={13} className="text-rose-400 animate-bounce" />
               {notifications.filter(n => !n.read).length} Alerts
             </Badge>
           )}
@@ -592,31 +592,31 @@ export default function Transporters() {
 
       {/* Modern KPI Stats Analytics Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-0 shadow-xs p-4 bg-slate-900 text-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-slate-800 opacity-20">
+        <Card className="border-0 shadow-xs p-4 glass-card text-white relative overflow-hidden">
+          <div className="absolute right-2 bottom-2 text-white/5 opacity-10">
             <Truck size={60} />
           </div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Total Registry</p>
-          <h3 className="text-2xl font-extrabold font-mono text-emerald-400 mt-1">{stats.total}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">registered carriers</span>
+          <p className="text-[9px] font-bold text-slate-200 uppercase tracking-widest">Total Registry</p>
+          <h3 className="text-2xl font-extrabold font-mono text-emerald-300 mt-1">{stats.total}</h3>
+          <span className="text-[9px] text-slate-200 font-medium">registered carriers</span>
         </Card>
         
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-amber-100 opacity-30">
+        <Card className="border-0 shadow-xs p-4 glass-card text-white relative overflow-hidden">
+          <div className="absolute right-2 bottom-2 text-white/5 opacity-10">
             <Clock size={60} />
           </div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Pending Audit</p>
-          <h3 className="text-2xl font-extrabold font-mono text-amber-600 mt-1">{stats.pending}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">KYC checks remaining</span>
+          <p className="text-[9px] font-bold text-slate-200 uppercase tracking-widest">Pending Audit</p>
+          <h3 className="text-2xl font-extrabold font-mono text-amber-300 mt-1">{stats.pending}</h3>
+          <span className="text-[9px] text-slate-200 font-medium">KYC checks remaining</span>
         </Card>
 
-        <Card className="border-0 shadow-xs p-4 bg-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-emerald-100 opacity-30">
+        <Card className="border-0 shadow-xs p-4 glass-card text-white relative overflow-hidden">
+          <div className="absolute right-2 bottom-2 text-white/5 opacity-10">
             <ShieldCheck size={60} />
           </div>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Approved KYC</p>
-          <h3 className="text-2xl font-extrabold font-mono text-emerald-600 mt-1">{stats.approved}</h3>
-          <span className="text-[9px] text-slate-500 font-medium">compliant fleet partners</span>
+          <p className="text-[9px] font-bold text-slate-200 uppercase tracking-widest">Approved KYC</p>
+          <h3 className="text-2xl font-extrabold font-mono text-emerald-300 mt-1">{stats.approved}</h3>
+          <span className="text-[9px] text-slate-200 font-medium">compliant fleet partners</span>
         </Card>
       </div>
 
@@ -626,18 +626,18 @@ export default function Transporters() {
         {/* Main Transporter Table, Compliance Actions */}
         <div className="w-full space-y-6">
           
-          <Card className="border-none shadow-sm bg-white">
-            <CardHeader className="pb-3 border-b border-slate-100">
+          <Card className="border-none shadow-sm glass-panel bg-transparent">
+            <CardHeader className="pb-3 border-b border-white/10">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
                 
                 {/* Search Bar matching Name, Mobile, Email, City, State */}
                 <div className="relative w-full max-w-sm">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
                   <Input 
                     value={search}
                     onChange={e => setSearch(e.target.value)}
                     placeholder="Search Name, Mobile, Email, City or State..." 
-                    className="pl-9 bg-gray-50 border-gray-200 text-xs h-9" 
+                    className="pl-9 glass-input text-white text-xs h-9" 
                   />
                 </div>
 
@@ -646,12 +646,12 @@ export default function Transporters() {
                   <select
                     value={statusFilter}
                     onChange={e => setStatusFilter(e.target.value)}
-                    className="flex h-9 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs shadow-none outline-none focus:ring-1 focus:ring-primary text-slate-600"
+                    className="flex h-9 rounded-md border border-white/10 bg-slate-950/40 px-3 py-1.5 text-xs shadow-none outline-none focus:ring-1 focus:ring-primary text-white"
                   >
-                    <option value="All">All Carriers</option>
-                    <option value="Pending">Pending Review</option>
-                    <option value="Approved">Verified KYC</option>
-                    <option value="Expired Documents">Expired Documents</option>
+                    <option className="bg-slate-950 text-white" value="All">All Carriers</option>
+                    <option className="bg-slate-950 text-white" value="Pending">Pending Review</option>
+                    <option className="bg-slate-950 text-white" value="Approved">Verified KYC</option>
+                    <option className="bg-slate-950 text-white" value="Expired Documents">Expired Documents</option>
                   </select>
                 </div>
 
@@ -661,15 +661,15 @@ export default function Transporters() {
             <CardContent className="p-0">
               <div className="overflow-x-auto w-full">
                 <Table>
-                  <TableHeader className="bg-slate-50/50">
-                    <TableRow>
-                      <TableHead className="font-bold text-slate-500 uppercase text-[10px] pl-6 py-3.5">Name</TableHead>
-                      <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Mobile</TableHead>
-                      <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Email</TableHead>
-                      <TableHead className="font-bold text-slate-500 uppercase text-[10px]">City</TableHead>
-                      <TableHead className="font-bold text-slate-500 uppercase text-[10px]">State</TableHead>
-                      <TableHead className="font-bold text-slate-500 uppercase text-[10px]">Verification Status</TableHead>
-                      <TableHead className="font-bold text-slate-500 uppercase text-[10px] text-right pr-6">Audit Actions</TableHead>
+                  <TableHeader className="bg-white/5">
+                    <TableRow className="border-b border-white/10 hover:bg-transparent">
+                      <TableHead className="font-bold text-slate-200 uppercase text-[10px] pl-6 py-3.5">Name</TableHead>
+                      <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Mobile</TableHead>
+                      <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Email</TableHead>
+                      <TableHead className="font-bold text-slate-200 uppercase text-[10px]">City</TableHead>
+                      <TableHead className="font-bold text-slate-200 uppercase text-[10px]">State</TableHead>
+                      <TableHead className="font-bold text-slate-200 uppercase text-[10px]">Verification Status</TableHead>
+                      <TableHead className="font-bold text-slate-200 uppercase text-[10px] text-right pr-6">Audit Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -677,51 +677,46 @@ export default function Transporters() {
                       {filteredTransporters.map((tr) => {
                         const hasExpiredDocs = Object.values(tr.documents).some(d => d.status === 'Expired');
                         
-                        // Calculate trust score
-                        const docValues = Object.values(tr.documents);
-                        const verifiedDocs = docValues.filter(d => d.status === 'Verified').length;
-                        const score = Math.round((verifiedDocs / docValues.length) * 100);
-
                         return (
                           <TableRow 
                             key={tr.id} 
                             onClick={() => { setSelectedProfile(tr); setIsEditing(false); }}
-                            className="hover:bg-slate-50/50 cursor-pointer transition-all border-b last:border-0"
+                            className="hover:bg-white/5 cursor-pointer transition-all border-b border-white/5 last:border-0"
                           >
                             <TableCell className="pl-6 py-4">
                               <div className="flex items-center gap-3">
                                 <div className={`w-9 h-9 rounded-xl flex items-center justify-center font-bold text-xs ${
-                                  tr.status === 'Approved' ? 'bg-emerald-100 text-emerald-800' :
-                                  tr.status === 'Blacklisted' ? 'bg-rose-100 text-rose-800' : 'bg-amber-100 text-amber-800'
+                                  tr.status === 'Approved' ? 'bg-emerald-500/20 text-emerald-300' :
+                                  tr.status === 'Blacklisted' ? 'bg-rose-500/20 text-rose-300' : 'bg-amber-500/20 text-amber-300'
                                 }`}>
                                   {tr.companyName.charAt(0)}
                                 </div>
                                 <div>
-                                  <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                  <p className="text-xs font-bold text-white flex items-center gap-1.5">
                                     {tr.companyName}
                                     {hasExpiredDocs && (
-                                      <Badge className="bg-rose-100 text-rose-800 text-[8px] font-bold border-none px-1 py-0 h-4">Expired Docs</Badge>
+                                      <Badge className="bg-rose-500/20 text-rose-300 text-[8px] font-bold border border-rose-500/30 px-1 py-0 h-4">Expired Docs</Badge>
                                     )}
                                   </p>
-                                  <p className="text-[10px] text-slate-500 mt-0.5">{tr.ownerName}</p>
+                                  <p className="text-[10px] text-slate-200 mt-0.5">{tr.ownerName}</p>
                                 </div>
                               </div>
                             </TableCell>
 
                             <TableCell>
-                              <span className="text-xs font-medium text-slate-800">{tr.mobile}</span>
+                              <span className="text-xs font-medium text-white">{tr.mobile}</span>
                             </TableCell>
 
                             <TableCell>
-                              <span className="text-xs text-slate-600 font-medium">{tr.email}</span>
+                              <span className="text-xs text-slate-200 font-medium">{tr.email}</span>
                             </TableCell>
 
                             <TableCell>
-                              <span className="text-xs text-slate-700 font-medium">{tr.city}</span>
+                              <span className="text-xs text-white font-medium">{tr.city}</span>
                             </TableCell>
 
                             <TableCell>
-                              <span className="text-xs text-slate-600 font-medium">{tr.state}</span>
+                              <span className="text-xs text-slate-200 font-medium">{tr.state}</span>
                             </TableCell>
 
                             <TableCell>{getStatusBadge(tr.status)}</TableCell>
@@ -731,22 +726,22 @@ export default function Transporters() {
                                 <Button 
                                   onClick={() => { setSelectedProfile(tr); setIsEditing(false); }}
                                   size="sm" 
-                                  className="bg-slate-100 hover:bg-slate-200 text-slate-700 h-7 text-[10px] font-bold uppercase rounded"
+                                  className="bg-white/10 hover:bg-white/20 text-white h-7 text-[10px] font-bold uppercase rounded border border-white/10"
                                 >
                                   View Docs
                                 </Button>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-200">
                                       <MoreHorizontal size={14} />
                                     </Button>
                                   </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem className="gap-2 text-xs" onClick={() => handleEditClick(tr)}>
+                                  <DropdownMenuContent align="end" className="bg-slate-950/95 border border-white/10 text-white">
+                                    <DropdownMenuItem className="gap-2 text-xs hover:bg-white/10 focus:bg-white/10 focus:text-white" onClick={() => handleEditClick(tr)}>
                                       <Edit2 size={13} /> Edit Profile
                                     </DropdownMenuItem>
                                     {tr.status !== 'Blacklisted' && (
-                                      <DropdownMenuItem className="gap-2 text-rose-600 font-bold text-xs" onClick={() => setBlacklistingTarget(tr)}>
+                                      <DropdownMenuItem className="gap-2 text-rose-400 font-bold text-xs hover:bg-white/10 focus:bg-white/10 focus:text-rose-400" onClick={() => setBlacklistingTarget(tr)}>
                                         <ShieldAlert size={13} /> Blacklist Carrier
                                       </DropdownMenuItem>
                                     )}
@@ -786,26 +781,26 @@ export default function Transporters() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed right-0 top-0 bottom-0 w-full max-w-xl bg-white shadow-2xl z-50 flex flex-col font-sans"
+              className="fixed right-0 top-0 bottom-0 w-full max-w-xl glass-sidebar bg-slate-900/95 shadow-2xl z-50 flex flex-col font-sans border-l border-white/10 text-white"
             >
               {/* Drawer Header */}
-              <div className="bg-slate-900 text-white p-6 flex justify-between items-center">
+              <div className="bg-white/5 border-b border-white/10 text-white p-6 flex justify-between items-center">
                 <div className="space-y-1">
                   <div className="flex items-center gap-2">
                     <Badge className="bg-slate-800 text-emerald-400 border border-slate-700 font-bold text-[9px] uppercase px-2 py-0.5">
                       Carrier Audit Hub
                     </Badge>
-                    <span className="text-xs text-slate-400 font-mono">ID: {selectedProfile.id}</span>
+                    <span className="text-xs text-slate-300 font-mono">ID: {selectedProfile.id}</span>
                   </div>
                   <h3 className="text-lg font-bold">{selectedProfile.companyName}</h3>
-                  <p className="text-xs text-slate-400">Managed by: {selectedProfile.ownerName}</p>
+                  <p className="text-xs text-slate-200">Managed by: {selectedProfile.ownerName}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button 
                     variant="ghost" 
                     size="icon" 
                     onClick={() => setSelectedProfile(null)}
-                    className="h-8 w-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-800"
+                    className="h-8 w-8 rounded-full text-slate-300 hover:text-white hover:bg-white/10"
                   >
                     <X size={18} />
                   </Button>

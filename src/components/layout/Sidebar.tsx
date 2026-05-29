@@ -41,8 +41,7 @@ const menuItems = [
     { name: "Business Reports", icon: BarChart3, path: "/reports" }
   ]},
   { group: "SETTINGS", items: [
-    { name: "General Settings", icon: Settings, path: "/settings" },
-    { name: "Notification Settings", icon: CheckCircle2, path: "/settings/notifications" }
+    { name: "General Settings", icon: Settings, path: "/settings" }
   ]}
 ]
 
@@ -54,7 +53,7 @@ const Sidebar = () => {
   return (
     <aside 
       className={cn(
-        "bg-sidebar text-sidebar-foreground h-screen transition-all duration-300 ease-in-out flex flex-col relative",
+        "glass-sidebar text-slate-200 h-screen transition-all duration-300 ease-in-out flex flex-col relative",
         isSidebarCollapsed ? "w-20" : "w-64"
       )}
     >
@@ -63,7 +62,7 @@ const Sidebar = () => {
           B
         </div>
         {!isSidebarCollapsed && (
-          <span className="font-bold text-xl tracking-tight whitespace-nowrap">Biofactor Admin</span>
+          <span className="font-bold text-xl tracking-tight text-white whitespace-nowrap">Biofactor Admin</span>
         )}
       </div>
 
@@ -78,7 +77,7 @@ const Sidebar = () => {
         {menuItems.map((group, idx) => (
           <div key={idx} className="mb-6">
             {!isSidebarCollapsed && (
-              <p className="text-[10px] font-semibold text-gray-500 mb-2 px-3 tracking-widest uppercase">
+              <p className="text-[10px] font-semibold text-slate-400/80 mb-2 px-3 tracking-widest uppercase">
                 {group.group}
               </p>
             )}
@@ -90,12 +89,12 @@ const Sidebar = () => {
                   className={cn(
                     "flex items-center gap-3 px-3 py-2 rounded-lg transition-all duration-200 group relative",
                     location.pathname === item.path 
-                      ? "bg-primary/10 text-primary border-l-4 border-primary rounded-l-none" 
-                      : "hover:bg-white/5 text-gray-400 hover:text-white"
+                      ? "bg-primary/20 text-white border-l-4 border-primary rounded-l-none" 
+                      : "hover:bg-white/5 text-slate-400 hover:text-white"
                   )}
                 >
                   <item.icon size={20} className={cn(
-                    location.pathname === item.path ? "text-primary" : "group-hover:text-white"
+                    location.pathname === item.path ? "text-primary" : "text-slate-400 group-hover:text-white"
                   )} />
                   {!isSidebarCollapsed && (
                     <span className="text-sm font-medium">{item.name}</span>
@@ -123,8 +122,8 @@ const Sidebar = () => {
           />
           {!isSidebarCollapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="text-sm font-medium text-white truncate">{profile?.fullName || "Admin User"}</span>
-              <span className="text-[10px] text-gray-500 truncate uppercase font-bold tracking-wider">{profile?.role || "SUPER ADMIN"}</span>
+              <span className="text-sm font-semibold text-white truncate">{profile?.fullName || "Admin User"}</span>
+              <span className="text-[10px] text-slate-400 truncate uppercase font-bold tracking-wider">{profile?.role || "SUPER ADMIN"}</span>
             </div>
           )}
         </div>

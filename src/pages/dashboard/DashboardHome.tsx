@@ -10,7 +10,7 @@ import {
   ArrowRight,
   PlusCircle,
   Clock,
-  CircleDollarSign,
+  IndianRupee,
   Loader2,
   HelpCircle,
   FolderOpen
@@ -170,8 +170,8 @@ export default function DashboardHome() {
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Logistics Control Center</h1>
-          <p className="text-gray-500 mt-1 font-medium">Real-time overview of your loads, dispatches, and enterprise revenue.</p>
+          <h1 className="text-3xl font-bold text-white tracking-tight">Logistics Control Center</h1>
+          <p className="text-slate-300 mt-1 font-medium">Real-time overview of your loads, dispatches, and enterprise revenue.</p>
         </div>
         <div className="flex items-center gap-3">
           <Link to="/create-load">
@@ -219,7 +219,7 @@ export default function DashboardHome() {
         <KPICard 
           title="Money Spend" 
           value={formatRevenue(stats.revenue)} 
-          icon={CircleDollarSign} 
+          icon={IndianRupee} 
           trend={10} 
           trendType="up" 
           color="bg-green-600" 
@@ -228,11 +228,11 @@ export default function DashboardHome() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Analytics Charts */}
-        <Card className="lg:col-span-2 border-none shadow-sm overflow-hidden bg-white">
+        <Card className="lg:col-span-2 border-none shadow-sm glass-panel bg-transparent overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Loads vs Money Spend</CardTitle>
-              <CardDescription>Weekly dispatch logistics and freight billing overview</CardDescription>
+              <CardTitle className="text-white">Loads vs Money Spend</CardTitle>
+              <CardDescription className="text-slate-200">Weekly dispatch logistics and freight billing overview</CardDescription>
             </div>
             <Tabs defaultValue="7days" className="w-[200px]">
               <TabsList className="grid w-full grid-cols-2">
@@ -244,14 +244,14 @@ export default function DashboardHome() {
           <CardContent className="h-[350px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#6B7280' }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.08)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#cbd5e1' }} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.1)' }} 
-                  cursor={{ fill: '#f3f4f6' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.15)', backgroundColor: 'rgba(15, 23, 42, 0.95)', color: '#fff' }} 
+                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
                 />
-                <Legend iconType="circle" />
+                <Legend iconType="circle" wrapperStyle={{ color: '#fff' }} />
                 <Bar dataKey="loads" name="Loads Posted" fill="#10B981" radius={[4, 4, 0, 0]} barSize={24} />
                 <Bar dataKey="revenue" name="Revenue (₹K)" fill="#2563EB" radius={[4, 4, 0, 0]} barSize={24} />
               </BarChart>
@@ -260,10 +260,10 @@ export default function DashboardHome() {
         </Card>
 
         {/* Load Status Donut */}
-        <Card className="border-none shadow-sm bg-white">
+        <Card className="border-none shadow-sm glass-panel bg-transparent">
           <CardHeader>
-            <CardTitle>Load Status Overview</CardTitle>
-            <CardDescription>Current state of all active logistics loads</CardDescription>
+            <CardTitle className="text-white">Load Status Overview</CardTitle>
+            <CardDescription className="text-slate-200">Current state of all active logistics loads</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] flex flex-col items-center justify-center">
             {pieData.length === 0 ? (
@@ -305,14 +305,14 @@ export default function DashboardHome() {
 
       <div className="mt-2">
         {/* Live Loads Activity */}
-        <Card className="border-none shadow-sm bg-white">
+        <Card className="border-none shadow-sm glass-panel bg-transparent">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle>Recent Load Activity</CardTitle>
-              <CardDescription>Latest loads posted to the marketplace</CardDescription>
+              <CardTitle className="text-white">Recent Load Activity</CardTitle>
+              <CardDescription className="text-slate-200">Latest loads posted to the marketplace</CardDescription>
             </div>
             <Link to="/loads">
-              <Button variant="ghost" size="sm" className="text-green-700 gap-1 hover:text-green-800 hover:bg-green-50 font-bold">
+              <Button variant="ghost" size="sm" className="text-green-400 gap-1 hover:text-green-300 hover:bg-white/5 font-bold">
                 View All <ArrowRight size={14} />
               </Button>
             </Link>
@@ -322,41 +322,41 @@ export default function DashboardHome() {
               <motion.div 
                 key={load.id}
                 whileHover={{ x: 5 }}
-                className="group border border-gray-100 rounded-xl p-4 hover:bg-green-50/30 transition-all duration-200 cursor-pointer"
+                className="group border border-white/10 rounded-xl p-4 hover:bg-white/5 transition-all duration-200 cursor-pointer"
                 onClick={() => navigate('/loads')}
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-100 text-green-700 rounded-lg">
+                    <div className="p-2 bg-green-500/20 text-green-300 rounded-lg">
                       <Package size={20} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-gray-900">{load.id}</span>
-                        <Badge variant="outline" className="text-[10px] font-bold border-green-200 text-green-700 bg-green-50 px-2 py-0.5">
+                        <span className="text-sm font-bold text-white">{load.id}</span>
+                        <Badge variant="outline" className="text-[10px] font-bold border-green-500/30 text-green-300 bg-green-500/20 px-2 py-0.5">
                           {load.status}
                         </Badge>
                       </div>
-                      <p className="text-xs text-gray-500 font-medium mt-0.5">{load.from} → {load.to}</p>
+                      <p className="text-xs text-slate-200 font-medium mt-0.5">{load.from} → {load.to}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-gray-400 font-bold uppercase">Total Amount</p>
-                    <p className="text-sm font-bold text-green-700 font-mono">₹{load.totalFreight.toLocaleString('en-IN')}</p>
+                    <p className="text-[10px] text-slate-300 font-bold uppercase">Total Amount</p>
+                    <p className="text-sm font-bold text-green-300 font-mono">₹{load.totalFreight.toLocaleString('en-IN')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 py-2 mt-2 border-t border-gray-50">
-                   <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                      <Clock size={14} className="text-gray-400" />
+                <div className="flex items-center gap-4 py-2 mt-2 border-t border-white/10">
+                   <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium">
+                      <Clock size={14} className="text-slate-300" />
                       <span>{load.dispatchDate}</span>
                    </div>
-                   <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                      <Package size={14} className="text-gray-400" />
+                   <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium">
+                      <Package size={14} className="text-slate-300" />
                       <span>{load.tonnes} Tonnes</span>
                    </div>
-                   <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                      <CircleDollarSign size={14} className="text-gray-400" />
+                   <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium">
+                      <IndianRupee size={14} className="text-slate-300" />
                       <span>₹{load.ratePerTonne}/T</span>
                    </div>
                 </div>

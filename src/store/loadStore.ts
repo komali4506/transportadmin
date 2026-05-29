@@ -81,8 +81,21 @@ export const useLoadStore = create<LoadState>((set, get) => ({
           };
         });
 
-        set({ loads: standardLoads, isConnecting: false });
-        loadService.saveLoads(standardLoads); // local cache
+        const now = new Date();
+        const autoClosedLoads = standardLoads.map(load => {
+          if (load.status !== 'Open') return load;
+          if (!load.dispatchDate) return load;
+          const timeStr = load.endTime || '23:59';
+          const deadlineStr = `${load.dispatchDate}T${timeStr}`;
+          const deadline = new Date(deadlineStr);
+          if (!isNaN(deadline.getTime()) && now >= deadline) {
+            return { ...load, status: 'Completed' as const };
+          }
+          return load;
+        });
+
+        set({ loads: autoClosedLoads, isConnecting: false });
+        loadService.saveLoads(autoClosedLoads); // local cache
         return;
       } catch (err: any) {
         console.error("Backend fetch error, falling back to local storage:", err);
@@ -92,7 +105,19 @@ export const useLoadStore = create<LoadState>((set, get) => ({
 
     // Fallback mode if backend down or not connected
     const loads = getInitialLoads();
-    set({ loads, connectionMode: 'demo', isConnecting: false });
+    const now = new Date();
+    const autoClosedLoads = loads.map(load => {
+      if (load.status !== 'Open') return load;
+      if (!load.dispatchDate) return load;
+      const timeStr = load.endTime || '23:59';
+      const deadlineStr = `${load.dispatchDate}T${timeStr}`;
+      const deadline = new Date(deadlineStr);
+      if (!isNaN(deadline.getTime()) && now >= deadline) {
+        return { ...load, status: 'Completed' as const };
+      }
+      return load;
+    });
+    set({ loads: autoClosedLoads, connectionMode: 'demo', isConnecting: false });
   },
 
   fetchBidsForLoad: async (loadId) => {

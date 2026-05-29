@@ -567,19 +567,19 @@ export default function ManageLoads() {
   const getStatusBadge = (status: Load['status']) => {
     switch (status) {
       case 'Open': 
-        return <Badge className="bg-emerald-100 text-emerald-800 hover:bg-emerald-200 border-none px-3 py-1 font-semibold">Open</Badge>;
+        return <Badge className="bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 border border-emerald-500/30 px-3 py-1 font-semibold">Open</Badge>;
       case 'Assigned & Dispatched': 
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none px-3 py-1 font-semibold">Assigned & Dispatched</Badge>;
+        return <Badge className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30 px-3 py-1 font-semibold">Assigned & Dispatched</Badge>;
       case 'CLOSED':
-        return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-200 border-none px-3 py-1 font-semibold">Assigned (Pending Dispatch)</Badge>;
+        return <Badge className="bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30 px-3 py-1 font-semibold">Assigned (Pending Dispatch)</Badge>;
       case 'Negotiation In Progress': 
-        return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-200 border-none px-3 py-1 font-semibold">Negotiating</Badge>;
+        return <Badge className="bg-amber-500/20 text-amber-300 hover:bg-amber-500/30 border border-amber-500/30 px-3 py-1 font-semibold">Negotiating</Badge>;
       case 'Awaiting New Bids': 
-        return <Badge className="bg-rose-100 text-rose-800 hover:bg-rose-200 border-none px-3 py-1 font-semibold">Awaiting Bids</Badge>;
+        return <Badge className="bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 border border-rose-500/30 px-3 py-1 font-semibold">Awaiting Bids</Badge>;
       case 'Completed': 
-        return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-200 border-none px-3 py-1 font-semibold">Completed</Badge>;
+        return <Badge className="bg-white/10 text-white hover:bg-white/20 border border-white/10 px-3 py-1 font-semibold">Completed</Badge>;
       default: 
-        return <Badge variant="outline" className="px-3 py-1 font-semibold">{status}</Badge>;
+        return <Badge variant="outline" className="px-3 py-1 font-semibold text-white border-white/10">{status}</Badge>;
     }
   };
 
@@ -588,14 +588,14 @@ export default function ManageLoads() {
       case 'Approved':
       case 'Selected':
       case 'ACCEPTED':
-        return <Badge className="bg-green-100 text-green-800 border-none px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Approved</Badge>;
+        return <Badge className="bg-green-500/20 text-green-300 border border-green-500/30 px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Approved</Badge>;
       case 'Rejected':
       case 'REJECTED':
-        return <Badge className="bg-red-100 text-red-800 border-none px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Rejected</Badge>;
+        return <Badge className="bg-red-500/20 text-red-300 border border-red-500/30 px-2 py-0.5 text-xs font-bold uppercase tracking-wider">Rejected</Badge>;
       case 'Negotiating':
-        return <Badge className="bg-amber-100 text-amber-800 border-none px-2 py-0.5 text-xs font-bold uppercase tracking-wider">NEGOTIATING</Badge>;
+        return <Badge className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 text-xs font-bold uppercase tracking-wider">NEGOTIATING</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800 border-none px-2 py-0.5 text-xs font-bold uppercase tracking-wider">PENDING</Badge>;
+        return <Badge className="bg-white/10 text-slate-200 border border-white/10 px-2 py-0.5 text-xs font-bold uppercase tracking-wider">PENDING</Badge>;
     }
   };
 
@@ -763,15 +763,15 @@ export default function ManageLoads() {
   };
 
   return (
-    <div className="space-y-6 pb-20 relative">
+    <div className="space-y-6 pb-20 relative font-sans">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Manage Loads</h1>
-          <p className="text-sm text-gray-500 mt-1">Monitor, manage, and dispatch active logistics loads in real-time.</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Manage Loads</h1>
+          <p className="text-sm text-slate-200 mt-1">Monitor, manage, and dispatch active logistics loads in real-time.</p>
         </div>
         <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleExport} className="gap-2 bg-white border-gray-200 shadow-sm hover:bg-gray-50 text-gray-700">
+          <Button variant="outline" onClick={handleExport} className="gap-2 bg-white/10 border-white/10 text-white hover:bg-white/20 shadow-sm">
             <Download size={16} /> Export DB
           </Button>
           <Link to="/create-load">
@@ -785,50 +785,51 @@ export default function ManageLoads() {
       {/* KPI Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
         {[
-          { label: 'Total Loads', val: stats.total, color: 'border-l-blue-500', icon: BarChart3, bg: 'text-blue-500' },
-          { label: 'Open Loads', val: stats.open, color: 'border-l-cyan-500', icon: FolderOpen, bg: 'text-cyan-500' },
-          { label: 'Assigned Loads', val: stats.assigned, color: 'border-l-blue-600', icon: Truck, bg: 'text-blue-600' },
-          { label: 'Completed Loads', val: stats.completed, color: 'border-l-gray-400', icon: CheckCircle2, bg: 'text-gray-500' },
-          { label: 'Money Spend', val: formatRevenue(stats.revenue), color: 'border-l-green-600', icon: CircleDollarSign, bg: 'text-green-600 font-mono' },
+          { label: 'Total Loads', val: stats.total, color: 'border-l-blue-500', icon: BarChart3, bg: 'text-blue-300' },
+          { label: 'Open Loads', val: stats.open, color: 'border-l-cyan-500', icon: FolderOpen, bg: 'text-cyan-300' },
+          { label: 'Assigned Loads', val: stats.assigned, color: 'border-l-blue-600', icon: Truck, bg: 'text-blue-400' },
+          { label: 'Completed Loads', val: stats.completed, color: 'border-l-gray-400', icon: CheckCircle2, bg: 'text-slate-300' },
+          { label: 'Money Spend', val: formatRevenue(stats.revenue), color: 'border-l-green-600', icon: CircleDollarSign, bg: 'text-emerald-300 font-mono font-bold' },
         ].map((c, i) => (
-          <Card key={i} className={`border-0 border-l-4 ${c.color} shadow-sm bg-white overflow-hidden`}>
+          <Card key={i} className={`border-0 border-l-4 ${c.color} shadow-sm glass-card text-white overflow-hidden`}>
             <CardContent className="p-4 flex justify-between items-center">
               <div className="space-y-1">
-                <p className="text-[10px] text-gray-400 font-bold uppercase tracking-wider">{c.label}</p>
-                <h3 className={`text-base font-bold text-gray-800 ${c.bg}`}>{c.val}</h3>
+                <p className="text-[10px] text-slate-200 font-bold uppercase tracking-wider">{c.label}</p>
+                <h3 className={`text-base font-extrabold ${c.bg}`}>{c.val}</h3>
               </div>
-              <c.icon className={`w-5 h-5 opacity-30 ${c.bg}`} />
+              <c.icon className={`w-5 h-5 opacity-40 ${c.bg}`} />
             </CardContent>
           </Card>
         ))}
       </div>
 
       {/* Table Section */}
-      <Card className="border-0 shadow-sm bg-white overflow-hidden">
-        <CardHeader className="border-b border-gray-50 p-5 bg-gray-50/30 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <Card className="border-0 shadow-sm glass-panel bg-transparent overflow-hidden">
+        <CardHeader className="border-b border-white/10 p-5 bg-white/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <CardTitle className="text-base font-bold text-gray-800">Dispatch Registry</CardTitle>
-            <CardDescription className="text-xs text-gray-400">All registered freight logistics loads.</CardDescription>
+            <CardTitle className="text-base font-bold text-white">Dispatch Registry</CardTitle>
+            <CardDescription className="text-xs text-slate-200">All registered freight logistics loads.</CardDescription>
           </div>
           <div className="flex flex-col sm:flex-row gap-2">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={15} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-300" size={15} />
               <Input 
                 value={search} 
                 onChange={e => setSearch(e.target.value)} 
                 placeholder="Search route, load, cargo..." 
-                className="pl-9 w-full sm:w-[220px] bg-gray-50/50 border-gray-200 h-9 text-xs focus-visible:ring-green-500 shadow-none"
+                className="pl-9 w-full sm:w-[220px] glass-input text-white h-9 text-xs shadow-none"
               />
             </div>
-            <div className="flex items-center gap-1.5 bg-gray-50/50 p-1 border rounded-lg">
+            <div className="flex items-center gap-1.5 bg-white/5 p-1 border border-white/10 rounded-lg">
               {['All', 'Open', 'Assigned', 'Completed'].map((tab) => (
                 <button
                   key={tab}
+                  type="button"
                   onClick={() => setStatusFilter(tab)}
                   className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all ${
                     statusFilter === tab 
-                      ? 'bg-white text-gray-800 shadow-xs' 
-                      : 'text-gray-400 hover:text-gray-600'
+                      ? 'bg-white/20 text-white shadow-xs border border-white/10' 
+                      : 'text-slate-200 hover:text-white'
                   }`}
                 >
                   {tab}
@@ -841,16 +842,16 @@ export default function ManageLoads() {
         {/* Data Table */}
         <div className="overflow-x-auto">
           <Table>
-            <TableHeader className="bg-gray-50/80">
-              <TableRow className="border-b border-gray-100 hover:bg-transparent">
-                <TableHead className="font-bold text-gray-600">Load ID</TableHead>
-                <TableHead className="font-bold text-gray-600">Route & Stops</TableHead>
-                <TableHead className="font-bold text-gray-600">Tonnes</TableHead>
-                <TableHead className="font-bold text-gray-600">Rate/Tonne</TableHead>
-                <TableHead className="font-bold text-gray-600">Estimated Value</TableHead>
-                <TableHead className="font-bold text-gray-600">Dispatch Date</TableHead>
-                <TableHead className="font-bold text-gray-600">Status</TableHead>
-                <TableHead className="font-bold text-gray-600 text-right">Actions</TableHead>
+            <TableHeader className="bg-white/5 border-b border-white/10">
+              <TableRow className="border-b border-white/10 hover:bg-transparent">
+                <TableHead className="font-bold text-slate-200">Load ID</TableHead>
+                <TableHead className="font-bold text-slate-200">Route & Stops</TableHead>
+                <TableHead className="font-bold text-slate-200">Tonnes</TableHead>
+                <TableHead className="font-bold text-slate-200">Rate/Tonne</TableHead>
+                <TableHead className="font-bold text-slate-200">Estimated Value</TableHead>
+                <TableHead className="font-bold text-slate-200">Dispatch Date</TableHead>
+                <TableHead className="font-bold text-slate-200">Status</TableHead>
+                <TableHead className="font-bold text-slate-200 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -862,34 +863,34 @@ export default function ManageLoads() {
                     exit={{ opacity: 0, scale: 0.95 }} 
                     transition={{ delay: i * 0.02 }}
                     key={load.id} 
-                    className="group border-b border-gray-50 hover:bg-green-50/20 cursor-pointer transition-colors"
+                    className="group border-b border-white/5 hover:bg-white/5 cursor-pointer transition-colors"
                     onClick={() => setSelectedLoadId(load.id)}
                   >
-                    <TableCell className="font-bold text-sm text-green-700">
+                    <TableCell className="font-bold text-sm text-emerald-300">
                       {load.bidId}
                     </TableCell>
                     <TableCell className="max-w-xs">
                       <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="text-sm font-semibold text-gray-800">{load.from}</span>
+                        <span className="text-sm font-semibold text-white">{load.from}</span>
                         {load.stops && load.stops.length > 0 && load.stops.map((stop, idx) => (
                           <React.Fragment key={idx}>
                              <ArrowRight size={13} className="text-orange-400" />
-                             <span className="text-xs font-semibold text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded">{stop}</span>
+                             <span className="text-xs font-semibold text-orange-300 bg-orange-500/20 border border-orange-500/30 px-1.5 py-0.5 rounded">{stop}</span>
                           </React.Fragment>
                         ))}
-                        <ArrowRight size={13} className="text-gray-400" />
-                        <span className="text-sm font-semibold text-gray-800">{load.to}</span>
+                        <ArrowRight size={13} className="text-slate-300" />
+                        <span className="text-sm font-semibold text-white">{load.to}</span>
                       </div>
                     </TableCell>
                     <TableCell>
-                      <span className="text-sm font-semibold text-gray-800 flex items-center gap-1"><Weight size={13}/> {load.tonnes} Tonnes</span>
+                      <span className="text-sm font-semibold text-white flex items-center gap-1"><Weight size={13}/> {load.tonnes} Tonnes</span>
                     </TableCell>
-                    <TableCell className="font-bold text-sm text-gray-700">₹{load.ratePerTonne.toLocaleString('en-IN')}/T</TableCell>
-                    <TableCell className="font-bold text-sm text-green-700">
+                    <TableCell className="font-bold text-sm text-slate-200">₹{load.ratePerTonne.toLocaleString('en-IN')}/T</TableCell>
+                    <TableCell className="font-bold text-sm text-emerald-300">
                       ₹{load.totalFreight.toLocaleString('en-IN')}
                     </TableCell>
-                    <TableCell className="text-xs text-gray-600 font-medium">
-                      <span className="flex items-center gap-1.5"><Calendar size={12} className="text-gray-400" /> {load.dispatchDate}</span>
+                    <TableCell className="text-xs text-slate-200 font-medium">
+                      <span className="flex items-center gap-1.5"><Calendar size={12} className="text-slate-300" /> {load.dispatchDate}</span>
                     </TableCell>
                     <TableCell>{getStatusBadge(load.status)}</TableCell>
                     <TableCell className="text-right" onClick={(e) => e.stopPropagation()}>
@@ -897,7 +898,7 @@ export default function ManageLoads() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 hover:bg-gray-100 rounded-full text-blue-600"
+                          className="h-8 w-8 hover:bg-white/10 rounded-full text-blue-300"
                           onClick={() => setSelectedLoadId(load.id)}
                         >
                           <Eye size={15} />
@@ -905,7 +906,7 @@ export default function ManageLoads() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 hover:bg-gray-100 rounded-full text-green-600"
+                          className="h-8 w-8 hover:bg-white/10 rounded-full text-green-300"
                           onClick={() => startEdit(load)}
                         >
                           <Edit size={15} />
@@ -913,7 +914,7 @@ export default function ManageLoads() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 hover:bg-red-50 text-red-600 rounded-full"
+                          className="h-8 w-8 hover:bg-red-500/10 text-red-300 rounded-full"
                           onClick={() => setDeleteConfirmId(load.id)}
                         >
                           <Trash2 size={15} />
@@ -925,7 +926,7 @@ export default function ManageLoads() {
                 
                 {filteredLoads.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="h-32 text-center text-gray-500 italic">
+                    <TableCell colSpan={8} className="h-32 text-center text-slate-300 italic">
                       No matching loads found in the database.
                     </TableCell>
                   </TableRow>
@@ -955,10 +956,10 @@ export default function ManageLoads() {
               animate={{ x: 0 }}
               exit={{ x: '100%' }}
               transition={{ type: 'spring', damping: 26, stiffness: 220 }}
-              className="relative w-full max-w-[1250px] h-full bg-slate-50 shadow-2xl flex flex-col z-20 overflow-hidden"
+              className="relative w-full max-w-[1250px] h-full glass-sidebar bg-slate-900/95 shadow-2xl flex flex-col z-20 overflow-hidden border-l border-white/10"
             >
               {/* Drawer Header */}
-              <div className="p-6 bg-gradient-to-r from-slate-900 to-slate-800 text-white flex items-center justify-between shadow-md">
+              <div className="p-6 bg-white/5 border-b border-white/10 text-white flex items-center justify-between shadow-md">
                 <div className="space-y-1">
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-bold px-2 py-0.5 rounded bg-green-500/20 text-green-400 border border-green-500/30">DISPATCH CONTROL</span>
@@ -970,135 +971,135 @@ export default function ManageLoads() {
                 </div>
                 
                 <div className="flex items-center gap-3">
-                  <Button variant="ghost" size="icon" onClick={() => setSelectedLoadId(null)} className="h-8 w-8 rounded-full text-slate-400 hover:text-white hover:bg-slate-700/50">
+                  <Button variant="ghost" size="icon" onClick={() => setSelectedLoadId(null)} className="h-8 w-8 rounded-full text-slate-400 hover:text-white hover:bg-white/10">
                     <X size={18} />
                   </Button>
                 </div>
               </div>
 
               {/* Drawer Workspace */}
-              <div className="flex-1 overflow-y-auto flex flex-col lg:flex-row">
+              <div className="flex-1 overflow-y-auto flex flex-col lg:flex-row text-white">
                 
                 {/* Left Side: Load Spec Sheet & Route Timeline */}
-                <div className="w-full lg:w-[350px] bg-white border-r border-slate-200 p-6 flex flex-col gap-6">
+                <div className="w-full lg:w-[350px] bg-white/5 border-r border-white/10 p-6 flex flex-col gap-6 text-white">
                   
                   {/* Status Banner */}
                   <div>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Operational Status</h3>
+                    <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-2">Operational Status</h3>
                     {selectedLoad.status === 'Assigned & Dispatched' ? (
-                      <div className="bg-blue-50 border border-blue-100 rounded-xl p-4 space-y-2">
-                        <div className="flex items-center gap-2 text-blue-800 font-bold text-xs">
-                          <CheckCircle2 size={16} className="text-blue-600" />
+                      <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4 space-y-2">
+                        <div className="flex items-center gap-2 text-blue-300 font-bold text-xs">
+                          <CheckCircle2 size={16} className="text-blue-400" />
                           LOAD ASSIGNED & DISPATCHED
                         </div>
-                        <p className="text-[11px] text-blue-700">
+                        <p className="text-[11px] text-slate-200">
                           Trip ID <span className="font-mono font-bold text-xs">{selectedLoad.tripId}</span> has been provisioned. Fleet is locked.
                         </p>
                       </div>
                     ) : selectedLoad.status === 'Negotiation In Progress' ? (
-                      <div className="bg-amber-50 border border-amber-100 rounded-xl p-4 space-y-1">
-                        <div className="flex items-center gap-2 text-amber-800 font-bold text-xs">
-                          <Clock size={16} className="text-amber-600 animate-pulse" />
+                      <div className="bg-amber-500/20 border border-amber-500/30 rounded-xl p-4 space-y-1">
+                        <div className="flex items-center gap-2 text-amber-300 font-bold text-xs">
+                          <Clock size={16} className="text-amber-400 animate-pulse" />
                           NEGOTIATION IN PROGRESS
                         </div>
-                        <p className="text-[11px] text-amber-700">
+                        <p className="text-[11px] text-slate-200">
                           Counter offer of <span className="font-bold">₹{selectedLoad.negotiationDetails?.counterOffer.toLocaleString()}</span> has been sent. Priority: {selectedLoad.negotiationDetails?.priority}.
                         </p>
                       </div>
                     ) : selectedLoad.status === 'Awaiting New Bids' ? (
-                      <div className="bg-rose-50 border border-rose-100 rounded-xl p-4 space-y-1">
-                        <div className="flex items-center gap-2 text-rose-800 font-bold text-xs">
-                          <AlertTriangle size={16} className="text-rose-600" />
+                      <div className="bg-rose-500/20 border border-rose-500/30 rounded-xl p-4 space-y-1">
+                        <div className="flex items-center gap-2 text-rose-300 font-bold text-xs">
+                          <AlertTriangle size={16} className="text-rose-400" />
                           AWAITING NEW BIDS
                         </div>
-                        <p className="text-[11px] text-rose-700">All current bids were rejected. Awaiting new user rate cards.</p>
+                        <p className="text-[11px] text-slate-200">All current bids were rejected. Awaiting new user rate cards.</p>
                       </div>
                     ) : selectedLoad.status === 'Completed' ? (
-                      <div className="bg-gray-50 border border-gray-100 rounded-xl p-4 space-y-1">
-                        <div className="flex items-center gap-2 text-gray-800 font-bold text-xs">
-                          <CheckCircle2 size={16} className="text-gray-500" />
+                      <div className="bg-white/10 border border-white/10 rounded-xl p-4 space-y-1">
+                        <div className="flex items-center gap-2 text-white font-bold text-xs">
+                          <CheckCircle2 size={16} className="text-green-300" />
                           TRIP COMPLETED
                         </div>
-                        <p className="text-[11px] text-gray-500">Trip has concluded. POD generated successfully.</p>
+                        <p className="text-[11px] text-slate-200">Trip has concluded. POD generated successfully.</p>
                       </div>
                     ) : (
-                      <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-4 space-y-1">
-                        <div className="flex items-center gap-2 text-emerald-800 font-bold text-xs">
-                          <Sparkles size={14} className="text-emerald-600 animate-spin" />
+                      <div className="bg-emerald-500/20 border border-emerald-500/30 rounded-xl p-4 space-y-1">
+                        <div className="flex items-center gap-2 text-emerald-300 font-bold text-xs">
+                          <Sparkles size={14} className="text-emerald-400 animate-spin" />
                           ACTIVE FREIGHT BIDDING
                         </div>
-                        <p className="text-[11px] text-emerald-700">Currently taking competitive bidding quotes in real-time.</p>
+                        <p className="text-[11px] text-slate-200">Currently taking competitive bidding quotes in real-time.</p>
                       </div>
                     )}
                   </div>
 
                   {/* Route Timeline */}
                   <div>
-                    <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Transit Route Timeline</h3>
+                    <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider mb-3">Transit Route Timeline</h3>
                     <div className="relative pl-6 space-y-6">
                       {/* Vertical Connector Line */}
-                      <div className="absolute left-[9px] top-2 bottom-2 w-0.5 bg-slate-200 border-dashed border-l border-slate-300" />
+                      <div className="absolute left-[9px] top-2 bottom-2 w-0.5 bg-white/10 border-dashed border-l border-white/20" />
 
                       {/* Origin */}
                       <div className="relative">
-                        <span className="absolute -left-6 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-100 text-green-700 font-bold text-[10px]">A</span>
-                        <h4 className="text-xs font-bold text-slate-800">{selectedLoad.from}</h4>
-                        <p className="text-[10px] text-slate-400">Loading Terminal</p>
+                        <span className="absolute -left-6 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-green-500/20 text-green-300 border border-green-500/30 font-bold text-[10px]">A</span>
+                        <h4 className="text-xs font-bold text-white">{selectedLoad.from}</h4>
+                        <p className="text-[10px] text-slate-200">Loading Terminal</p>
                       </div>
 
                       {/* Stops */}
                       {selectedLoad.stops && selectedLoad.stops.map((stop, index) => (
                         <div key={index} className="relative">
-                          <span className="absolute -left-6 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-100 text-orange-700 font-bold text-[10px]">{index + 1}</span>
-                          <h4 className="text-xs font-bold text-slate-800">{stop}</h4>
-                          <p className="text-[10px] text-orange-500 font-medium">Intermediate Stop</p>
+                          <span className="absolute -left-6 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-orange-500/20 text-orange-300 border border-orange-500/30 font-bold text-[10px]">{index + 1}</span>
+                          <h4 className="text-xs font-bold text-white">{stop}</h4>
+                          <p className="text-[10px] text-orange-400 font-medium">Intermediate Stop</p>
                         </div>
                       ))}
 
                       {/* Destination */}
                       <div className="relative">
-                        <span className="absolute -left-6 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-100 text-blue-700 font-bold text-[10px]">B</span>
-                        <h4 className="text-xs font-bold text-slate-800">{selectedLoad.to}</h4>
-                        <p className="text-[10px] text-slate-400">Receiving Warehouse</p>
+                        <span className="absolute -left-6 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 font-bold text-[10px]">B</span>
+                        <h4 className="text-xs font-bold text-white">{selectedLoad.to}</h4>
+                        <p className="text-[10px] text-slate-200">Receiving Warehouse</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Load Specifications Card */}
-                  <Card className="border border-slate-100 shadow-none bg-slate-50/50">
-                    <CardHeader className="p-4 border-b border-slate-100 bg-slate-50">
-                      <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-600 flex items-center gap-1.5">
-                        <Building2 size={13} className="text-slate-400" /> SPECIFICATIONS
+                  <Card className="border border-white/10 shadow-none bg-white/5 text-white">
+                    <CardHeader className="p-4 border-b border-white/10 bg-white/5">
+                      <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-200 flex items-center gap-1.5">
+                        <Building2 size={13} className="text-slate-300" /> SPECIFICATIONS
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="p-4 space-y-3.5">
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Product Cargo:</span>
-                        <span className="font-bold text-slate-800">{selectedLoad.product}</span>
+                        <span className="text-slate-300">Product Cargo:</span>
+                        <span className="font-bold text-white">{selectedLoad.product}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Payload Weight:</span>
-                        <span className="font-bold text-slate-800">{selectedLoad.tonnes} Tonnes</span>
+                        <span className="text-slate-300">Payload Weight:</span>
+                        <span className="font-bold text-white">{selectedLoad.tonnes} Tonnes</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Target Freight / T:</span>
-                        <span className="font-bold text-slate-800 font-mono">₹{selectedLoad.ratePerTonne}/T</span>
+                        <span className="text-slate-300">Target Freight / T:</span>
+                        <span className="font-bold text-white font-mono">₹{selectedLoad.ratePerTonne}/T</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Dispatch Target:</span>
-                        <span className="font-bold text-slate-800">{selectedLoad.dispatchDate}</span>
+                        <span className="text-slate-300">Dispatch Target:</span>
+                        <span className="font-bold text-white">{selectedLoad.dispatchDate}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Bid End Date:</span>
-                        <span className="font-bold text-slate-800">{selectedLoad.endDate || 'N/A'}</span>
+                        <span className="text-slate-300">Bid End Date:</span>
+                        <span className="font-bold text-white">{selectedLoad.endDate || 'N/A'}</span>
                       </div>
                       <div className="flex justify-between items-center text-xs">
-                        <span className="text-slate-400">Bid End Time:</span>
-                        <span className="font-bold text-slate-800">{selectedLoad.endTime || 'N/A'}</span>
+                        <span className="text-slate-300">Bid End Time:</span>
+                        <span className="font-bold text-white">{selectedLoad.endTime || 'N/A'}</span>
                       </div>
-                      <div className="border-t border-dashed border-slate-200 pt-3 flex justify-between items-center">
-                        <span className="text-xs font-bold text-slate-500">Target Total Freight:</span>
-                        <span className="text-sm font-bold text-green-700 font-mono">₹{selectedLoad.totalFreight.toLocaleString('en-IN')}</span>
+                      <div className="border-t border-dashed border-white/10 pt-3 flex justify-between items-center">
+                        <span className="text-xs font-bold text-slate-300">Total Amount:</span>
+                        <span className="text-sm font-bold text-green-400 font-mono">₹{selectedLoad.totalFreight.toLocaleString('en-IN')}</span>
                       </div>
                     </CardContent>
                   </Card>
@@ -1161,16 +1162,6 @@ export default function ManageLoads() {
                       </Card>
                     );
                   })()}
-                  
-                  {/* Export Options */}
-                  <div className="mt-auto space-y-2">
-                    <Button 
-                      onClick={() => handleExportBidsComparison(selectedLoad)}
-                      className="w-full bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 shadow-xs h-9 justify-center gap-2 text-xs font-bold"
-                    >
-                      <FileSpreadsheet size={14} className="text-green-600" /> Export Comparison Sheet
-                    </Button>
-                  </div>
                 </div>
 
                 {/* Right Side: Bid Marketplace (Cheapest Bids) */}
@@ -1179,10 +1170,10 @@ export default function ManageLoads() {
                   {/* Bids Control Bar */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div>
-                      <h3 className="text-base font-bold text-slate-800 flex items-center gap-2">
+                      <h3 className="text-base font-bold text-white flex items-center gap-2">
                         Top 7 Competitive Bids <Badge className="bg-green-600 text-white font-mono">{filteredBids.length}</Badge>
                       </h3>
-                      <p className="text-xs text-slate-400">Sort carrier quotes by bid amount in ascending or descending order.</p>
+                      <p className="text-xs text-slate-300">Sort carrier quotes by bid amount in ascending or descending order.</p>
                     </div>
 
                     <div className="flex flex-col sm:flex-row gap-2">
@@ -1224,8 +1215,8 @@ export default function ManageLoads() {
                   <Card className="border border-slate-200/60 shadow-sm bg-white overflow-hidden flex-1 flex flex-col">
                     <div className="overflow-x-auto flex-1">
                       <Table className="w-full">
-                        <TableHeader className="bg-slate-50 border-b">
-                          <TableRow>
+                        <TableHeader className="bg-slate-50 border-b border-slate-200">
+                          <TableRow className="border-b border-slate-200 hover:bg-transparent">
                             <TableHead className="font-bold text-slate-600 text-xs w-[60px] text-center">Rank</TableHead>
                             <TableHead className="font-bold text-slate-600 text-xs">Name</TableHead>
                             <TableHead className="font-bold text-slate-600 text-xs">Role</TableHead>
@@ -1246,16 +1237,17 @@ export default function ManageLoads() {
                                 exit={{ opacity: 0 }} 
                                 transition={{ type: 'spring', stiffness: 220, damping: 20 }}
                                 key={bid.id} 
-                                className={`border-b group hover:bg-slate-50/80 transition-colors ${
-                                  bid.status === 'Approved' || bid.status === 'ACCEPTED' ? 'bg-green-50/20' : ''
+                                className={`border-b border-slate-100 group hover:bg-slate-50/80 transition-colors ${
+                                  bid.status === 'Approved' || bid.status === 'ACCEPTED' ? 'bg-green-50/30' : ''
                                 }`}
                               >
                                 {/* Rank */}
                                 <TableCell className="text-center font-mono">
                                   <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full font-bold text-xs ${
-                                    bid.rank === 1 ? 'bg-amber-100 text-amber-800' :
-                                    bid.rank === 2 ? 'bg-slate-200 text-slate-700' :
-                                    bid.rank === 3 ? 'bg-orange-100 text-orange-800' : 'bg-slate-100 text-slate-600'
+                                    bid.rank === 1 ? 'bg-amber-100 text-amber-800 border border-amber-200' :
+                                    bid.rank === 2 ? 'bg-slate-200 text-slate-700 border border-slate-300' :
+                                    bid.rank === 3 ? 'bg-orange-100 text-orange-800 border border-orange-200' : 
+                                    'bg-slate-100 text-slate-600 border border-slate-200'
                                   }`}>
                                     {bid.rank}
                                   </span>
@@ -1319,7 +1311,7 @@ export default function ManageLoads() {
                                         View Truck Details
                                       </Button>
                                     ) : (
-                                      <span className="text-[10px] text-red-500 font-bold uppercase tracking-wider bg-red-50 px-2 py-1 rounded">Rejected</span>
+                                      <span className="text-[10px] text-red-600 border border-red-200 bg-red-50 px-2 py-1 rounded font-bold uppercase tracking-wider">Rejected</span>
                                     )
                                   ) : (
                                     <div className="flex items-center justify-end gap-1 select-none">
