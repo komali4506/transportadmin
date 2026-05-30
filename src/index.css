@@ -102,7 +102,7 @@ input[type="number"] {
 
 /* Glassmorphism CSS System */
 body {
-  background-image: linear-gradient(rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.72)), url('/assets/logistics_bg.png') !important;
+  background-image: linear-gradient(rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.72)), url('./assets/logistics_bg.png') !important;
   background-size: cover !important;
   background-attachment: fixed !important;
   background-position: center !important;
