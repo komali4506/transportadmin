@@ -377,7 +377,7 @@ export default function CreateLoadPage() {
                           value={formData.tonnes}
                           onChange={handleChange}
                           min="0"
-                          step="0.01"
+                          step="1"
                           className={`glass-input text-white border-white/10 shadow-sm ${errors.tonnes ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
                         />
                         {errors.tonnes && <p className="text-xs text-red-500 animate-in fade-in">{errors.tonnes}</p>}
@@ -396,7 +396,7 @@ export default function CreateLoadPage() {
                           value={formData.costPerTonne}
                           onChange={handleChange}
                           min="0"
-                          step="0.01"
+                          step="1"
                           className={`glass-input text-white border-white/10 shadow-sm ${errors.costPerTonne ? 'border-red-500' : 'focus-visible:ring-green-500'}`}
                         />
                         {errors.costPerTonne && <p className="text-xs text-red-500 animate-in fade-in">{errors.costPerTonne}</p>}
