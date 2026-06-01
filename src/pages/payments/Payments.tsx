@@ -332,9 +332,6 @@ export default function Payments() {
         
         {/* Total Outstanding */}
         <Card className="border-0 shadow-xs glass-card text-white overflow-hidden relative">
-          <div className="absolute right-0 bottom-0 translate-x-3 translate-y-3 opacity-10">
-            <CreditCard size={150} />
-          </div>
           <CardContent className="p-6 space-y-4">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
@@ -432,24 +429,24 @@ export default function Payments() {
                 ) : (
                   filteredPayments.map((tx) => (
                     <TableRow key={tx.paymentId} className="hover:bg-white/5 border-b border-white/5">
-                      <TableCell className="text-xs font-mono font-bold text-emerald-300 pl-6">{tx.loadId}</TableCell>
+                      <TableCell className="text-xs font-mono font-bold text-emerald-600 pl-6">{tx.loadId}</TableCell>
                       <TableCell className="text-xs py-3.5">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="font-semibold text-white">{tx.transporter}</span>
-                          <span className="text-[9px] font-bold text-slate-200 bg-white/10 border border-white/10 px-1.5 py-0.5 rounded-md">
+                          <span className="font-bold text-[#4A3525]">{tx.transporter}</span>
+                          <span className="text-[9px] font-bold text-[#8C6239] bg-[#8C6239]/10 border border-[#8C6239]/20 px-1.5 py-0.5 rounded-md">
                             {tx.transporterRole || 'Transporter'}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="text-xs text-slate-200">{tx.createdAt}</TableCell>
-                      <TableCell className="font-bold text-xs font-mono text-white">₹{tx.amount.toLocaleString()}</TableCell>
+                      <TableCell className="text-xs text-[#4A3525] font-semibold">{tx.createdAt}</TableCell>
+                      <TableCell className="font-extrabold text-xs font-mono text-[#4A3525]">₹{tx.amount.toLocaleString()}</TableCell>
                       <TableCell>{getStatusBadge(tx.status)}</TableCell>
                       <TableCell className="text-right pr-6" onClick={e => e.stopPropagation()}>
                         <div className="flex justify-end gap-1.5 select-none">
                           <Button 
                             onClick={() => setViewingInvoice(tx)}
                             size="sm"
-                            className="bg-white/10 hover:bg-white/20 text-white h-7 text-[10px] px-2.5 font-bold uppercase rounded border border-white/10"
+                            className="bg-[#4A3525]/10 hover:bg-[#4A3525]/20 text-[#4A3525] h-7 text-[10px] px-2.5 font-bold uppercase rounded border border-[#4A3525]/20"
                           >
                             View Invoice
                           </Button>
@@ -469,7 +466,7 @@ export default function Payments() {
                            {tx.invoiceUrl && (
                              <button 
                                onClick={() => handleDownloadInvoice(tx.invoiceUrl!, `invoice-${tx.invoiceId}.pdf`)}
-                               className="inline-flex items-center justify-center h-7 w-7 text-slate-300 hover:text-white hover:bg-white/10 rounded-md transition-colors animate-none"
+                               className="inline-flex items-center justify-center h-7 w-7 bg-amber-500/10 text-amber-700 hover:bg-amber-500 hover:text-white rounded-md transition-colors border border-amber-500/20 shadow-xs"
                                title="Download Invoice"
                              >
                                <Download size={14} />

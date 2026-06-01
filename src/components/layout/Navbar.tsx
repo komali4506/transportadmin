@@ -30,9 +30,9 @@ const Navbar = () => {
   const isOnline = profile?.isOnline ?? true
 
   return (
-    <header className="h-16 glass-navbar flex items-center justify-between px-6 sticky top-0 z-40">
-      <div className="flex items-center gap-4 w-1/2">
-        <Button variant="ghost" size="icon" className="lg:hidden" onClick={toggleSidebar}>
+    <header className="h-16 glass-navbar flex items-center justify-between px-4 sm:px-6 sticky top-0 z-40">
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <Button variant="ghost" size="icon" className="lg:hidden shrink-0" onClick={toggleSidebar}>
           <Menu size={20} />
         </Button>
         <div className="relative w-full max-w-md hidden md:block">
@@ -44,11 +44,12 @@ const Navbar = () => {
         </div>
 
         {/* Live Backend Connection Indicator */}
-        <div className="flex items-center">
+        <div className="flex items-center shrink-0">
           {isConnecting ? (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50/70 text-blue-600 border border-blue-100/80 shadow-xs animate-pulse">
               <RefreshCw className="h-3 w-3 animate-spin text-blue-500" />
-              <span>Connecting API...</span>
+              <span className="hidden md:inline">Connecting API...</span>
+              <span className="md:hidden text-[10px]">Connecting...</span>
             </div>
           ) : connectionMode === 'live' ? (
             <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-50/70 text-emerald-700 border border-emerald-100/80 shadow-xs transition-all duration-300 hover:bg-emerald-100">
@@ -56,9 +57,9 @@ const Navbar = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
-              <Wifi className="h-3 w-3 text-emerald-600" />
-              <span className="hidden sm:inline">Backend Connected (ngrok)</span>
-              <span className="sm:hidden">Backend Connected</span>
+              <Wifi className="h-3.5 w-3.5 text-emerald-600" />
+              <span className="hidden md:inline">Backend Connected (ngrok)</span>
+              <span className="md:hidden text-[10px]">Live</span>
             </div>
           ) : (
             <div 
@@ -66,16 +67,16 @@ const Navbar = () => {
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-amber-50/70 text-amber-700 border border-amber-100/80 shadow-xs transition-all duration-300 hover:bg-amber-100 cursor-help"
             >
               <span className="h-2 w-2 rounded-full bg-amber-500"></span>
-              <WifiOff className="h-3 w-3 text-amber-600" />
-              <span className="hidden sm:inline">Demo Mode (Local Offline)</span>
-              <span className="sm:hidden">Demo Mode</span>
+              <WifiOff className="h-3.5 w-3.5 text-amber-600" />
+              <span className="hidden md:inline">Demo Mode (Local Offline)</span>
+              <span className="md:hidden text-[10px]">Demo</span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        <Button variant="ghost" size="icon" className="relative text-slate-300 hover:text-white transition-colors">
+      <div className="flex items-center gap-1.5 shrink-0">
+        <Button variant="ghost" size="icon" className="relative text-[#4A3525] hover:bg-black/5 transition-colors">
           <Bell size={20} />
           <span className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
         </Button>
@@ -84,19 +85,19 @@ const Navbar = () => {
           variant="ghost" 
           size="icon" 
           onClick={() => navigate('/settings')}
-          className="text-slate-300 hover:text-white transition-colors"
+          className="text-[#4A3525] hover:bg-black/5 transition-colors"
         >
           <Settings size={20} />
         </Button>
 
-        <div className="h-8 w-[1px] bg-white/15 mx-2"></div>
+        <div className="h-6 w-[1px] bg-[#4A3525]/15 mx-1"></div>
 
         {/* Profile Top Right Corner Section */}
         <div className="relative">
           <Button 
             variant="ghost" 
             onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-            className="flex items-center gap-3 pl-2 pr-4 py-1 h-auto rounded-full hover:bg-white/5 text-white"
+            className="flex items-center gap-2 px-1.5 py-1 h-auto rounded-full hover:bg-black/5"
           >
             <ProfileAvatar 
               src={adminPhoto} 
@@ -106,8 +107,8 @@ const Navbar = () => {
               isOnline={isOnline}
             />
             <div className="text-left hidden sm:block">
-              <p className="text-sm font-semibold leading-none text-white">{adminName}</p>
-              <p className="text-[10px] text-slate-300 mt-1 uppercase font-bold tracking-wider">{adminRole}</p>
+              <p className="text-sm font-semibold leading-none text-[#4A3525]">{adminName}</p>
+              <p className="text-[10px] text-[#8C6239] mt-1 uppercase font-bold tracking-wider">{adminRole}</p>
             </div>
           </Button>
 

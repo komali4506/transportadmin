@@ -535,21 +535,21 @@ export default function Transporters() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case 'Approved': return <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2.5 py-1 font-bold">Verified</Badge>;
-      case 'Pending': return <Badge className="bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 font-bold animate-pulse">Pending Review</Badge>;
-      case 'Under Review': return <Badge className="bg-blue-500/20 text-blue-300 border border-blue-500/30 px-2.5 py-1 font-bold">Under Review</Badge>;
-      case 'Blacklisted': return <Badge className="bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2.5 py-1 font-bold">Blacklisted</Badge>;
-      default: return <Badge variant="outline" className="px-2.5 py-1 font-bold text-white border-white/10">{status}</Badge>;
+      case 'Approved': return <Badge className="bg-emerald-600 text-white border border-emerald-500/40 px-2.5 py-1 font-bold shadow-xs">Verified</Badge>;
+      case 'Pending': return <Badge className="bg-amber-500 text-slate-950 border border-amber-400/40 px-2.5 py-1 font-bold animate-pulse shadow-xs">Pending Review</Badge>;
+      case 'Under Review': return <Badge className="bg-blue-600 text-white border border-blue-500/40 px-2.5 py-1 font-bold shadow-xs">Under Review</Badge>;
+      case 'Blacklisted': return <Badge className="bg-rose-600 text-white border border-rose-500/40 px-2.5 py-1 font-bold shadow-xs">Blacklisted</Badge>;
+      default: return <Badge variant="outline" className="px-2.5 py-1 font-bold text-[#4A3525] border-[#4A3525]/20">{status}</Badge>;
     }
   };
 
   const getDocStatusBadge = (status: DocumentStatus) => {
     switch (status) {
-      case 'Verified': return <Badge className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-[10px] font-bold">Verified</Badge>;
-      case 'Pending': return <Badge className="bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold animate-pulse">Review Pending</Badge>;
-      case 'Rejected': return <Badge className="bg-rose-500/20 text-rose-300 border border-rose-500/30 text-[10px] font-bold">Rejected</Badge>;
-      case 'Expired': return <Badge className="bg-red-500/20 text-red-300 border border-red-500/30 text-[10px] font-bold flex items-center gap-1"><AlertTriangle size={9} /> Expired</Badge>;
-      default: return <Badge variant="outline" className="text-[10px] text-white border-white/10">{status}</Badge>;
+      case 'Verified': return <Badge className="bg-emerald-600 text-white border border-emerald-500/40 text-[10px] font-bold shadow-xs">Verified</Badge>;
+      case 'Pending': return <Badge className="bg-amber-500 text-slate-950 border border-amber-400/40 text-[10px] font-bold animate-pulse shadow-xs">Review Pending</Badge>;
+      case 'Rejected': return <Badge className="bg-rose-600 text-white border border-rose-500/40 text-[10px] font-bold shadow-xs">Rejected</Badge>;
+      case 'Expired': return <Badge className="bg-red-600 text-white border border-red-500/40 text-[10px] font-bold flex items-center gap-1 shadow-xs"><AlertTriangle size={9} /> Expired</Badge>;
+      default: return <Badge variant="outline" className="text-[10px] text-[#4A3525] border-[#4A3525]/20">{status}</Badge>;
     }
   };
 
@@ -698,25 +698,25 @@ export default function Transporters() {
                                       <Badge className="bg-rose-500/20 text-rose-300 text-[8px] font-bold border border-rose-500/30 px-1 py-0 h-4">Expired Docs</Badge>
                                     )}
                                   </p>
-                                  <p className="text-[10px] text-slate-200 mt-0.5">{tr.ownerName}</p>
+                                  <p className="text-[10px] text-[#8C6239] font-semibold mt-0.5">{tr.ownerName}</p>
                                 </div>
                               </div>
                             </TableCell>
 
                             <TableCell>
-                              <span className="text-xs font-medium text-white">{tr.mobile}</span>
+                              <span className="text-xs font-bold text-[#4A3525]">{tr.mobile}</span>
                             </TableCell>
 
                             <TableCell>
-                              <span className="text-xs text-slate-200 font-medium">{tr.email}</span>
+                              <span className="text-xs text-[#4A3525] font-semibold">{tr.email}</span>
                             </TableCell>
 
                             <TableCell>
-                              <span className="text-xs text-white font-medium">{tr.city}</span>
+                              <span className="text-xs text-[#4A3525] font-bold">{tr.city}</span>
                             </TableCell>
 
                             <TableCell>
-                              <span className="text-xs text-slate-200 font-medium">{tr.state}</span>
+                              <span className="text-xs text-[#4A3525] font-bold">{tr.state}</span>
                             </TableCell>
 
                             <TableCell>{getStatusBadge(tr.status)}</TableCell>
@@ -726,13 +726,13 @@ export default function Transporters() {
                                 <Button 
                                   onClick={() => { setSelectedProfile(tr); setIsEditing(false); }}
                                   size="sm" 
-                                  className="bg-white/10 hover:bg-white/20 text-white h-7 text-[10px] font-bold uppercase rounded border border-white/10"
+                                  className="bg-[#4A3525]/10 hover:bg-[#4A3525]/25 text-[#4A3525] h-7 text-[10px] font-bold uppercase rounded border border-[#4A3525]/20"
                                 >
                                   View Docs
                                 </Button>
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-200">
+                                    <Button variant="ghost" size="icon" className="h-7 w-7 text-[#4A3525] hover:bg-[#4A3525]/10">
                                       <MoreHorizontal size={14} />
                                     </Button>
                                   </DropdownMenuTrigger>

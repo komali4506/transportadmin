@@ -87,32 +87,6 @@ export const ProfileDropdown: React.FC<ProfileDropdownProps> = ({
                   <p className="text-[10px] text-gray-400 mt-1">Review account profile details</p>
                 </div>
               </button>
-
-              <button
-                onClick={() => handleOptionClick(onEditProfile)}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50/55 hover:text-emerald-800 rounded-lg transition-all group text-left"
-              >
-                <div className="p-1.5 rounded-md bg-gray-50 group-hover:bg-emerald-100/50 group-hover:text-emerald-700 transition-colors">
-                  <ShieldAlert size={16} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium leading-none">Edit Profile</p>
-                  <p className="text-[10px] text-gray-400 mt-1">Modify credentials & settings</p>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleOptionClick(() => navigate('/settings'))}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm text-gray-700 hover:bg-emerald-50/55 hover:text-emerald-800 rounded-lg transition-all group text-left"
-              >
-                <div className="p-1.5 rounded-md bg-gray-50 group-hover:bg-emerald-100/50 group-hover:text-emerald-700 transition-colors">
-                  <Settings size={16} />
-                </div>
-                <div className="flex-1">
-                  <p className="font-medium leading-none">Account Settings</p>
-                  <p className="text-[10px] text-gray-400 mt-1">System & ERP preferences</p>
-                </div>
-              </button>
             </div>
 
             {/* Logout Action */}

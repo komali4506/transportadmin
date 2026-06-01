@@ -115,9 +115,9 @@ export default function DashboardHome() {
   const pieData = useMemo(() => {
     const totalCount = loads.length || 1;
     return [
-      { name: 'Open Loads', value: Math.round((stats.open / totalCount) * 100) || 0, color: '#10B981' }, 
-      { name: 'Assigned Loads', value: Math.round((stats.assigned / totalCount) * 100) || 0, color: '#2563EB' }, 
-      { name: 'Completed', value: Math.round((stats.completed / totalCount) * 100) || 0, color: '#9CA3AF' }, 
+      { name: 'Open Loads', value: Math.round((stats.open / totalCount) * 100) || 0, color: '#8C6239' }, 
+      { name: 'Assigned Loads', value: Math.round((stats.assigned / totalCount) * 100) || 0, color: '#4A3525' }, 
+      { name: 'Completed', value: Math.round((stats.completed / totalCount) * 100) || 0, color: '#705541' }, 
     ].filter(p => p.value > 0);
   }, [loads, stats]);
 
@@ -170,12 +170,12 @@ export default function DashboardHome() {
       {/* Welcome Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-white tracking-tight">Logistics Control Center</h1>
-          <p className="text-slate-300 mt-1 font-medium">Real-time overview of your loads, dispatches, and enterprise revenue.</p>
+          <h1 className="text-3xl font-bold text-[#4A3525] tracking-tight">Logistics Control Center</h1>
+          <p className="text-[#8C6239] mt-1 font-medium">Real-time overview of your loads, dispatches, and enterprise revenue.</p>
         </div>
         <div className="flex items-center gap-3">
           <Link to="/create-load">
-            <Button className="bg-green-600 hover:bg-green-700 text-white gap-2 shadow-md">
+            <Button className="bg-[#4A3525] hover:bg-[#3d2c1e] text-white gap-2 shadow-md">
               <PlusCircle size={18} /> Create New Bid
             </Button>
           </Link>
@@ -231,8 +231,8 @@ export default function DashboardHome() {
         <Card className="lg:col-span-2 border-none shadow-sm glass-panel bg-transparent overflow-hidden">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-white">Loads vs Money Spend</CardTitle>
-              <CardDescription className="text-slate-200">Weekly dispatch logistics and freight billing overview</CardDescription>
+              <CardTitle className="text-[#4A3525]">Loads vs Money Spend</CardTitle>
+              <CardDescription className="text-slate-600">Weekly dispatch logistics and freight billing overview</CardDescription>
             </div>
             <Tabs defaultValue="7days" className="w-[200px]">
               <TabsList className="grid w-full grid-cols-2">
@@ -244,16 +244,16 @@ export default function DashboardHome() {
           <CardContent className="h-[350px] pt-4">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barData}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.08)" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#cbd5e1' }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#cbd5e1' }} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(74,53,37,0.08)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8C6239' }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 12, fill: '#8C6239' }} />
                 <Tooltip 
-                  contentStyle={{ borderRadius: '12px', border: '1px solid rgba(255,255,255,0.15)', backgroundColor: 'rgba(15, 23, 42, 0.95)', color: '#fff' }} 
-                  cursor={{ fill: 'rgba(255,255,255,0.05)' }}
+                  contentStyle={{ borderRadius: '12px', border: '1px solid rgba(74,53,37,0.15)', backgroundColor: 'rgba(255, 255, 255, 0.95)', color: '#4A3525' }} 
+                  cursor={{ fill: 'rgba(74,53,37,0.05)' }}
                 />
-                <Legend iconType="circle" wrapperStyle={{ color: '#fff' }} />
-                <Bar dataKey="loads" name="Loads Posted" fill="#10B981" radius={[4, 4, 0, 0]} barSize={24} />
-                <Bar dataKey="revenue" name="Revenue (₹K)" fill="#2563EB" radius={[4, 4, 0, 0]} barSize={24} />
+                <Legend iconType="circle" wrapperStyle={{ color: '#4A3525' }} />
+                <Bar dataKey="loads" name="Loads Posted" fill="#8C6239" radius={[4, 4, 0, 0]} barSize={24} />
+                <Bar dataKey="revenue" name="Revenue (₹K)" fill="#4A3525" radius={[4, 4, 0, 0]} barSize={24} />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -262,8 +262,8 @@ export default function DashboardHome() {
         {/* Load Status Donut */}
         <Card className="border-none shadow-sm glass-panel bg-transparent">
           <CardHeader>
-            <CardTitle className="text-white">Load Status Overview</CardTitle>
-            <CardDescription className="text-slate-200">Current state of all active logistics loads</CardDescription>
+            <CardTitle className="text-[#4A3525]">Load Status Overview</CardTitle>
+            <CardDescription className="text-slate-600">Current state of all active logistics loads</CardDescription>
           </CardHeader>
           <CardContent className="h-[300px] flex flex-col items-center justify-center">
             {pieData.length === 0 ? (
@@ -292,8 +292,8 @@ export default function DashboardHome() {
                   {pieData.map((item) => (
                     <div key={item.name} className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-                      <span className="text-xs text-gray-500 font-medium">{item.name}</span>
-                      <span className="text-xs font-bold ml-auto">{item.value}%</span>
+                      <span className="text-xs text-slate-500 font-medium">{item.name}</span>
+                      <span className="text-xs font-bold ml-auto text-[#4A3525]">{item.value}%</span>
                     </div>
                   ))}
                 </div>
@@ -308,11 +308,11 @@ export default function DashboardHome() {
         <Card className="border-none shadow-sm glass-panel bg-transparent">
           <CardHeader className="flex flex-row items-center justify-between">
             <div>
-              <CardTitle className="text-white">Recent Load Activity</CardTitle>
-              <CardDescription className="text-slate-200">Latest loads posted to the marketplace</CardDescription>
+              <CardTitle className="text-[#4A3525]">Recent Load Activity</CardTitle>
+              <CardDescription className="text-slate-600">Latest loads posted to the marketplace</CardDescription>
             </div>
             <Link to="/loads">
-              <Button variant="ghost" size="sm" className="text-green-400 gap-1 hover:text-green-300 hover:bg-white/5 font-bold">
+              <Button variant="ghost" size="sm" className="text-[#8C6239] gap-1 hover:text-[#4A3525] hover:bg-[#745325]/5 font-bold">
                 View All <ArrowRight size={14} />
               </Button>
             </Link>
@@ -322,41 +322,41 @@ export default function DashboardHome() {
               <motion.div 
                 key={load.id}
                 whileHover={{ x: 5 }}
-                className="group border border-white/10 rounded-xl p-4 hover:bg-white/5 transition-all duration-200 cursor-pointer"
+                className="group border border-[#745325]/15 rounded-xl p-4 hover:bg-[#745325]/5 transition-all duration-200 cursor-pointer"
                 onClick={() => navigate('/loads')}
               >
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-green-500/20 text-green-300 rounded-lg">
+                    <div className="p-2 bg-[#8C6239]/10 text-[#8C6239] rounded-lg">
                       <Package size={20} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <span className="text-sm font-bold text-white">{load.id}</span>
-                        <Badge variant="outline" className="text-[10px] font-bold border-green-500/30 text-green-300 bg-green-500/20 px-2 py-0.5">
+                        <span className="text-sm font-bold text-[#4A3525]">{load.id}</span>
+                        <Badge variant="outline" className="text-[10px] font-bold border-green-600/30 text-green-700 bg-green-50 px-2 py-0.5">
                           {load.status}
                         </Badge>
                       </div>
-                      <p className="text-xs text-slate-200 font-medium mt-0.5">{load.from} → {load.to}</p>
+                      <p className="text-xs text-slate-600 font-medium mt-0.5">{load.from} → {load.to}</p>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-[10px] text-slate-300 font-bold uppercase">Total Amount</p>
-                    <p className="text-sm font-bold text-green-300 font-mono">₹{load.totalFreight.toLocaleString('en-IN')}</p>
+                    <p className="text-[10px] text-[#8C6239] font-bold uppercase">Total Amount</p>
+                    <p className="text-sm font-bold text-[#4A3525] font-mono">₹{load.totalFreight.toLocaleString('en-IN')}</p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-4 py-2 mt-2 border-t border-white/10">
-                   <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium">
-                      <Clock size={14} className="text-slate-300" />
+                <div className="flex items-center gap-4 py-2 mt-2 border-t border-[#745325]/10">
+                   <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                      <Clock size={14} className="text-[#8C6239]" />
                       <span>{load.dispatchDate}</span>
                    </div>
-                   <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium">
-                      <Package size={14} className="text-slate-300" />
+                   <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                      <Package size={14} className="text-[#8C6239]" />
                       <span>{load.tonnes} Tonnes</span>
                    </div>
-                   <div className="flex items-center gap-1.5 text-xs text-slate-200 font-medium">
-                      <IndianRupee size={14} className="text-slate-300" />
+                   <div className="flex items-center gap-1.5 text-xs text-slate-600 font-medium">
+                      <IndianRupee size={14} className="text-[#8C6239]" />
                       <span>₹{load.ratePerTonne}/T</span>
                    </div>
                 </div>

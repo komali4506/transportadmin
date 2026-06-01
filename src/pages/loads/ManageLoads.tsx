@@ -770,16 +770,6 @@ export default function ManageLoads() {
           <h1 className="text-2xl font-bold text-white tracking-tight">Manage Loads</h1>
           <p className="text-sm text-slate-200 mt-1">Monitor, manage, and dispatch active logistics loads in real-time.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" onClick={handleExport} className="gap-2 bg-white/10 border-white/10 text-white hover:bg-white/20 shadow-sm">
-            <Download size={16} /> Export DB
-          </Button>
-          <Link to="/create-load">
-            <Button className="gap-2 bg-green-600 hover:bg-green-700 text-white shadow-md transition-all active:scale-95">
-              <Plus size={16} /> New Bid
-            </Button>
-          </Link>
-        </div>
       </div>
 
       {/* KPI Cards Grid */}
@@ -898,7 +888,7 @@ export default function ManageLoads() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 hover:bg-white/10 rounded-full text-blue-300"
+                          className="h-8 w-8 hover:bg-blue-500/10 rounded-full text-blue-600 hover:text-blue-800"
                           onClick={() => setSelectedLoadId(load.id)}
                         >
                           <Eye size={15} />
@@ -906,7 +896,7 @@ export default function ManageLoads() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 hover:bg-white/10 rounded-full text-green-300"
+                          className="h-8 w-8 hover:bg-amber-500/10 rounded-full text-amber-600 hover:text-amber-800"
                           onClick={() => startEdit(load)}
                         >
                           <Edit size={15} />
@@ -914,7 +904,7 @@ export default function ManageLoads() {
                         <Button 
                           variant="ghost" 
                           size="icon" 
-                          className="h-8 w-8 hover:bg-red-500/10 text-red-300 rounded-full"
+                          className="h-8 w-8 hover:bg-red-500/10 text-red-600 hover:text-red-800 rounded-full"
                           onClick={() => setDeleteConfirmId(load.id)}
                         >
                           <Trash2 size={15} />

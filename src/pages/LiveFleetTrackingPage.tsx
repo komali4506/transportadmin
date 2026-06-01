@@ -647,21 +647,21 @@ export default function LiveFleetTrackingPage() {
       {/* Top GPS Analytics Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card className="border-0 shadow-xs p-4 glass-card text-white relative overflow-hidden">
-          <div className="absolute right-2 bottom-2 text-slate-700 opacity-20"><Truck size={60} /></div>
+          <div className="absolute right-2 bottom-2 text-[#4A3525] opacity-55"><Truck size={60} /></div>
           <p className="text-[9px] font-bold text-slate-200 uppercase tracking-widest">Active Fleet</p>
           <h3 className="text-2xl font-extrabold font-mono text-emerald-300 mt-1">{stats.active}</h3>
           <span className="text-[9px] text-slate-300 font-medium">vehicles live</span>
         </Card>
 
         <Card className="border-0 shadow-xs p-4 glass-card relative overflow-hidden text-white">
-          <div className="absolute right-2 bottom-2 text-rose-300 opacity-10"><Clock size={60} /></div>
+          <div className="absolute right-2 bottom-2 text-rose-700 opacity-55"><Clock size={60} /></div>
           <p className="text-[9px] font-bold text-slate-200 uppercase tracking-widest">Delayed Trips</p>
           <h3 className="text-2xl font-extrabold font-mono text-rose-400 mt-1">{stats.delayed}</h3>
           <span className="text-[9px] text-slate-300 font-medium">require monitoring</span>
         </Card>
 
         <Card className="border-0 shadow-xs p-4 glass-card relative overflow-hidden text-white">
-          <div className="absolute right-2 bottom-2 text-emerald-300 opacity-10"><CheckCircle2 size={60} /></div>
+          <div className="absolute right-2 bottom-2 text-emerald-700 opacity-55"><CheckCircle2 size={60} /></div>
           <p className="text-[9px] font-bold text-slate-200 uppercase tracking-widest">Completed</p>
           <h3 className="text-2xl font-extrabold font-mono text-emerald-300 mt-1">{stats.completed}</h3>
           <span className="text-[9px] text-slate-300 font-medium">deliveries verified</span>

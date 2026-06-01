@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, Mail, Loader2, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { Lock, Mail, Loader2, ArrowRight, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 import { useToast } from '@/hooks/use-toast';
 import { useTransporterStore } from '@/store/transporterStore';
@@ -13,8 +13,9 @@ export const LoginPage: React.FC = () => {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState('dinesh.kumar@biofactor.in');
-  const [password, setPassword] = useState('••••••••');
+  const [password, setPassword] = useState('admin123');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,38 +78,38 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-emerald-950 flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
+    <div className="min-h-screen flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans">
       {/* Decorative Blur Spheres */}
-      <div className="absolute top-0 -left-4 w-96 h-96 bg-emerald-700/20 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 -right-4 w-96 h-96 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-800/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-0 -left-4 w-96 h-96 bg-[#8C6239]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 -right-4 w-96 h-96 bg-[#4A3525]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#745325]/5 rounded-full blur-3xl pointer-events-none" />
 
       {/* Grid Overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#022c22_1px,transparent_1px),linear-gradient(to_bottom,#022c22_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-30 pointer-events-none" />
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#745325_1px,transparent_1px),linear-gradient(to_bottom,#745325_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)] opacity-5 pointer-events-none" />
 
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring", duration: 0.7 }}
-        className="w-full max-w-md bg-white/5 border border-white/10 backdrop-blur-md p-8 rounded-3xl shadow-2xl space-y-8 relative z-10"
+        className="w-full max-w-md glass-panel p-8 rounded-3xl shadow-2xl space-y-8 relative z-10"
       >
         {/* Brand / Logo */}
         <div className="flex flex-col items-center text-center space-y-3">
-          <div className="w-12 h-12 bg-emerald-500 rounded-2xl flex items-center justify-center font-black text-white text-2xl shadow-lg shadow-emerald-500/20">
-            B
+          <div className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center bg-white border border-[#4A3525]/10 shadow-lg shadow-[#4A3525]/5">
+            <img src="/biofactor_logo.png" alt="Biofactor Logo" className="w-14 h-14 object-contain" />
           </div>
           <div>
-            <h2 className="text-xl font-bold text-white tracking-tight">Biofactor Logistics</h2>
-            <p className="text-xs text-emerald-400 mt-1 uppercase font-semibold tracking-wider">Enterprise ERP Gateway</p>
+            <h2 className="text-xl font-bold text-[#4A3525] tracking-tight">Biofactor Logistics</h2>
+            <p className="text-xs text-[#8C6239] mt-1 uppercase font-semibold tracking-wider">Enterprise ERP Gateway</p>
           </div>
         </div>
 
         {/* Informative Alert for quick demo */}
-        <div className="p-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl flex gap-2.5 items-start">
-          <ShieldCheck className="text-emerald-400 shrink-0 mt-0.5" size={16} />
+        <div className="p-3 bg-[#8C6239]/10 border border-[#8C6239]/20 rounded-xl flex gap-2.5 items-start">
+          <ShieldCheck className="text-[#8C6239] shrink-0 mt-0.5" size={16} />
           <div className="text-left">
-            <p className="text-[11px] font-bold text-emerald-300 uppercase tracking-wide">ERP Demo Access</p>
-            <p className="text-[10px] text-emerald-200 mt-0.5">Use the prefilled administrator credentials to log back in instantly.</p>
+            <p className="text-[11px] font-bold text-[#4A3525] uppercase tracking-wide">ERP Demo Access</p>
+            <p className="text-[10px] text-slate-600 mt-0.5">Use the prefilled administrator credentials to log back in instantly.</p>
           </div>
         </div>
 
@@ -116,15 +117,15 @@ export const LoginPage: React.FC = () => {
         <form onSubmit={handleLogin} className="space-y-5">
           {/* Email */}
           <div className="space-y-1.5 text-left">
-            <label className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest block">Email Address</label>
+            <label className="text-[10px] font-bold text-[#8C6239] uppercase tracking-widest block">Email Address</label>
             <div className="relative">
-              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400/70" size={16} />
+              <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8C6239]/80" size={16} />
               <input
                 type="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-sm bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 text-white rounded-xl outline-none transition-all placeholder:text-gray-500"
+                className="w-full pl-10 pr-4 py-3 text-sm bg-white/40 border border-[#745325]/20 focus:border-[#4A3525] focus:ring-1 focus:ring-[#4A3525]/30 text-[#4A3525] rounded-xl outline-none transition-all placeholder:text-slate-400"
                 placeholder="admin@biofactor.in"
               />
             </div>
@@ -132,17 +133,24 @@ export const LoginPage: React.FC = () => {
 
           {/* Password */}
           <div className="space-y-1.5 text-left">
-            <label className="text-[10px] font-bold text-emerald-300 uppercase tracking-widest block">Password</label>
+            <label className="text-[10px] font-bold text-[#8C6239] uppercase tracking-widest block">Password</label>
             <div className="relative">
-              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-emerald-400/70" size={16} />
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8C6239]/80" size={16} />
               <input
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 text-sm bg-white/5 border border-white/10 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 text-white rounded-xl outline-none transition-all placeholder:text-gray-500"
+                className="w-full pl-10 pr-10 py-3 text-sm bg-white/40 border border-[#745325]/20 focus:border-[#4A3525] focus:ring-1 focus:ring-[#4A3525]/30 text-[#4A3525] rounded-xl outline-none transition-all placeholder:text-slate-400"
                 placeholder="••••••••"
               />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#8C6239]/80 hover:text-[#4A3525] transition-colors"
+              >
+                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+              </button>
             </div>
           </div>
 
@@ -150,7 +158,7 @@ export const LoginPage: React.FC = () => {
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3.5 mt-2 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-sm font-bold text-white shadow-lg shadow-emerald-500/10 flex items-center justify-center gap-2 transition-all disabled:opacity-75"
+            className="w-full py-3.5 mt-2 rounded-xl bg-gradient-to-r from-[#4A3525] to-[#8C6239] hover:from-[#3d2c1e] hover:to-[#745325] text-sm font-bold text-white shadow-lg shadow-[#4A3525]/10 flex items-center justify-center gap-2 transition-all disabled:opacity-75"
           >
             {isLoading ? (
               <>
@@ -167,7 +175,7 @@ export const LoginPage: React.FC = () => {
         </form>
 
         {/* Footer */}
-        <p className="text-[10px] text-emerald-500/70 text-center">
+        <p className="text-[10px] text-[#8C6239]/80 text-center">
           © {new Date().getFullYear()} Biofactor Agri-Sciences. All Administrative Actions are Audited.
         </p>
       </motion.div>

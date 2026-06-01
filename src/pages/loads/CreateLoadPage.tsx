@@ -167,9 +167,9 @@ export default function CreateLoadPage() {
         <Button 
           type="button"
           onClick={() => navigate(-1)}
-          className="rounded-full w-10 h-10 bg-white/10 border border-white/20 hover:bg-white/20 text-white shadow-sm flex items-center justify-center transition-all duration-200"
+          className="rounded-full w-10 h-10 bg-[#4A3525]/10 border border-[#4A3525]/30 hover:bg-[#4A3525]/20 text-[#4A3525] shadow-sm flex items-center justify-center transition-all duration-200"
         >
-          <ArrowLeft className="w-5 h-5 text-white" />
+          <ArrowLeft className="w-5 h-5 text-[#4A3525]" />
         </Button>
         <div>
           <h1 className="text-2xl font-bold tracking-tight text-white">Create New Bid</h1>
@@ -441,9 +441,9 @@ export default function CreateLoadPage() {
                   type="button" 
                   onClick={handleReset}
                   disabled={isLoading}
-                  className="w-full sm:w-auto bg-white/10 border border-white/20 hover:bg-white/20 text-white font-bold uppercase tracking-wider px-8 py-6 h-auto transition-all active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto bg-[#4A3525]/10 border border-[#4A3525]/30 hover:bg-[#4A3525]/20 text-[#4A3525] font-bold uppercase tracking-wider px-8 py-6 h-auto transition-all active:scale-95 flex items-center justify-center gap-2"
                 >
-                  <RotateCcw className="w-5 h-5 mr-2" />
+                  <RotateCcw className="w-5 h-5 mr-2 text-[#4A3525]" />
                   Reset Form
                 </Button>
               </div>
