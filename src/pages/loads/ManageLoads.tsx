@@ -216,7 +216,7 @@ export default function ManageLoads() {
         truckNumber,
         rcImageUrl,
         insImageUrl,
-        rating: bid.driverRating || 4.8,
+        rating: bid.driverRating || 0,
         experienceYears: bid.experienceYears || 6,
         kycStatus: bid.transporterDetails?.kycStatus || "Verified"
       });
@@ -465,10 +465,10 @@ export default function ManageLoads() {
           companyName: bid.transporterName || 'Carrier',
           ownerName: bid.transporterDetails?.ownerName || bid.transporterName || 'Owner',
           fleetSize: Number(bid.transporterDetails?.fleetSize || (isDriver ? 1 : 10)),
-          completedTrips: Number(bid.transporterDetails?.completedTrips || 100),
+          completedTrips: Number(bid.transporterDetails?.completedTrips || 0),
           insuranceValidity: bid.transporterDetails?.insuranceValidity || 'Valid',
           kycStatus: bid.transporterDetails?.kycStatus || 'Verified',
-          rating: Number(bid.driverRating || 4.5),
+          rating: Number(bid.driverRating || 0),
           experienceYears: Number(bid.experienceYears || 5),
           role: isDriver ? ('Driver' as const) : ('Transporter' as const)
         }
@@ -1111,7 +1111,16 @@ export default function ManageLoads() {
                           </div>
                           <div className="flex justify-between">
                             <span className="opacity-75">Rating:</span>
-                            <span className="font-semibold flex items-center gap-1"><Star size={11} className="fill-amber-400 text-amber-400" /> {selectedLoad.assignedTransporter.rating}</span>
+                            <span className="font-semibold flex items-center gap-1">
+                              {selectedLoad.assignedTransporter.rating && selectedLoad.assignedTransporter.rating > 0 ? (
+                                <>
+                                  <Star size={11} className="fill-amber-400 text-amber-400" />
+                                  {Number(selectedLoad.assignedTransporter.rating).toFixed(1)}
+                                </>
+                              ) : (
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">New</span>
+                              )}
+                            </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="opacity-75">{isDriver ? 'Operating Mode:' : 'Fleet Size:'}</span>
@@ -1279,8 +1288,14 @@ export default function ManageLoads() {
                                 {/* Rating */}
                                 <TableCell>
                                   <div className="flex items-center gap-1 text-xs font-semibold text-slate-800">
-                                    <Star size={12} className="fill-amber-400 text-amber-400" />
-                                    {bid.driverRating}
+                                    {bid.driverRating && bid.driverRating > 0 ? (
+                                      <>
+                                        <Star size={12} className="fill-amber-400 text-amber-400" />
+                                        {Number(bid.driverRating).toFixed(1)}
+                                      </>
+                                    ) : (
+                                      <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-700 text-[10px] font-bold rounded uppercase tracking-wider">New</span>
+                                    )}
                                   </div>
                                 </TableCell>
 

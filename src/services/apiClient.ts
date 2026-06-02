@@ -5,7 +5,7 @@
  * Includes automatic failover to local storage and mock data if ngrok is offline.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://app-transportbiofactor.azurewebsites.net';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://anabella-furuncular-tammi.ngrok-free.dev';
 
 // Custom headers to bypass ngrok landing/warning page & support JSON payloads
 const getHeaders = () => {
@@ -150,7 +150,7 @@ export const apiClient = {
         bidAmount: Number(b.bid_amount || 0),
         pricePerTonne: Number(b.price_per_tonne || b.bid_amount / (b.tonnes || 1)),
         eta: b.eta || '24 hrs',
-        driverRating: Number(b.user?.average_rating || b.driver_rating || 4.5),
+        driverRating: Number(b.user?.average_rating || b.driver_rating || 0),
         experienceYears: Number(b.experience_years || 5),
         verificationStatus: b.verification_status || ['KYC Verified', 'Trusted Transporter'],
         status: b.status || 'Pending',
@@ -162,10 +162,10 @@ export const apiClient = {
           companyName: realName,
           ownerName: b.user?.name || b.owner_name || 'Owner',
           fleetSize: Number(b.fleet_size || (realRole === 'Driver' ? 1 : 10)),
-          completedTrips: Number(b.completed_trips || 100),
+          completedTrips: Number(b.completed_trips || 0),
           insuranceValidity: b.insurance_validity || 'Valid',
           kycStatus: b.kyc_status || 'Verified',
-          rating: Number(b.user?.average_rating || b.rating || 4.5),
+          rating: Number(b.user?.average_rating || b.rating || 0),
           experienceYears: Number(b.experience_years || 5),
           role: realRole
         }
