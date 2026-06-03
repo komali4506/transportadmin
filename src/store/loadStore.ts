@@ -84,9 +84,10 @@ export const useLoadStore = create<LoadState>((set, get) => ({
         const now = new Date();
         const autoClosedLoads = standardLoads.map(load => {
           if (load.status !== 'Open') return load;
-          if (!load.dispatchDate) return load;
+          const dateStr = load.endDate || load.dispatchDate;
+          if (!dateStr) return load;
           const timeStr = load.endTime || '23:59';
-          const deadlineStr = `${load.dispatchDate}T${timeStr}`;
+          const deadlineStr = `${dateStr}T${timeStr}`;
           const deadline = new Date(deadlineStr);
           if (!isNaN(deadline.getTime()) && now >= deadline) {
             return { ...load, status: 'Completed' as const };
@@ -108,9 +109,10 @@ export const useLoadStore = create<LoadState>((set, get) => ({
     const now = new Date();
     const autoClosedLoads = loads.map(load => {
       if (load.status !== 'Open') return load;
-      if (!load.dispatchDate) return load;
+      const dateStr = load.endDate || load.dispatchDate;
+      if (!dateStr) return load;
       const timeStr = load.endTime || '23:59';
-      const deadlineStr = `${load.dispatchDate}T${timeStr}`;
+      const deadlineStr = `${dateStr}T${timeStr}`;
       const deadline = new Date(deadlineStr);
       if (!isNaN(deadline.getTime()) && now >= deadline) {
         return { ...load, status: 'Completed' as const };
@@ -347,11 +349,12 @@ export const useLoadStore = create<LoadState>((set, get) => ({
     const updatedLoads = get().loads.map(load => {
       // Only auto-close loads that are still open and have a deadline
       if (load.status !== 'Open') return load;
-      if (!load.dispatchDate) return load;
+      if (!load.endDate && !load.dispatchDate) return load;
 
-      // Build deadline: use dispatchDate + endTime if available, else end of dispatch day
+      // Build deadline: use endDate (or dispatchDate) + endTime if available, else end of day
+      const dateStr = load.endDate || load.dispatchDate;
       const timeStr = load.endTime || '23:59';
-      const deadlineStr = `${load.dispatchDate}T${timeStr}`;
+      const deadlineStr = `${dateStr}T${timeStr}`;
       const deadline = new Date(deadlineStr);
 
       if (!isNaN(deadline.getTime()) && now >= deadline) {

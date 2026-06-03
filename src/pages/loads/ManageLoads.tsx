@@ -1112,14 +1112,8 @@ export default function ManageLoads() {
                           <div className="flex justify-between">
                             <span className="opacity-75">Rating:</span>
                             <span className="font-semibold flex items-center gap-1">
-                              {selectedLoad.assignedTransporter.rating && selectedLoad.assignedTransporter.rating > 0 ? (
-                                <>
-                                  <Star size={11} className="fill-amber-400 text-amber-400" />
-                                  {Number(selectedLoad.assignedTransporter.rating).toFixed(1)}
-                                </>
-                              ) : (
-                                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded">New</span>
-                              )}
+                              <Star size={11} className="fill-amber-400 text-amber-400" />
+                              {(Number(selectedLoad.assignedTransporter.rating || 0)).toFixed(1)}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -1288,14 +1282,8 @@ export default function ManageLoads() {
                                 {/* Rating */}
                                 <TableCell>
                                   <div className="flex items-center gap-1 text-xs font-semibold text-slate-800">
-                                    {bid.driverRating && bid.driverRating > 0 ? (
-                                      <>
-                                        <Star size={12} className="fill-amber-400 text-amber-400" />
-                                        {Number(bid.driverRating).toFixed(1)}
-                                      </>
-                                    ) : (
-                                      <span className="px-1.5 py-0.5 bg-blue-500/10 text-blue-700 text-[10px] font-bold rounded uppercase tracking-wider">New</span>
-                                    )}
+                                    <Star size={12} className="fill-amber-400 text-amber-400" />
+                                    {(Number(bid.driverRating || 0)).toFixed(1)}
                                   </div>
                                 </TableCell>
 
